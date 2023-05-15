@@ -22,6 +22,7 @@ add_executable( ${PROJECT_NAME}
   ${headers}
   src/ns3_client.cpp
   src/ns3_adapter.cpp
+  src/ns3_reg_client.cpp
   src/driver_application/driver_application.cpp
   src/driver_wrapper/driver_wrapper.cpp
   src/main.cpp)

@@ -245,12 +245,6 @@ bool NS3Adapter::sendMessageSrv(cav_srvs::SendMessage::Request& req, cav_srvs::S
 
 void NS3Adapter::pre_spin()
 {
-    if (!handshake_sent_)
-    {
-        std::string handshake_msg = compose_handshake_msg(vehicle_id_, role_id_, std::to_string(ns3_broadcasting_port_), host_ip_);
-        broadcastHandshakemsg(handshake_msg);
-        handshake_sent_ = true;
-    }
     // Adjust output queue size if config changed.
     if(ns3_client_error_)
     {
@@ -262,6 +256,13 @@ void NS3Adapter::pre_spin()
     //TODO: Set up functionality for disconnected NS-3
     if (!connecting_ && !ns3_client_.connected())
     {
+        //if (!handshake_sent_)
+        //{
+            ns3_reg_client_.connect(ns3_address_, ns3_registration_port_);
+            std::string handshake_msg = compose_handshake_msg(vehicle_id_, role_id_, std::to_string(ns3_broadcasting_port_), host_ip_);
+            broadcastHandshakemsg(handshake_msg);
+            //handshake_sent_ = true;
+        //}
         connecting_ = true;
         if (connect_thread_)
             connect_thread_->join();
@@ -473,7 +474,7 @@ void NS3Adapter::broadcastHandshakemsg(const std::string& msg_string)
     std::string addres;
     unsigned short remote_port;
     
-    bool success = ns3_client_.registermsg(message_content, ns3_address_, ns3_registration_port_, local_port_);
+    bool success = ns3_reg_client_.registermsg(message_content, ns3_address_, ns3_registration_port_, local_port_);
     ROS_WARN_STREAM("Handshake Message success: " << success);
     if (!success) {
         ROS_WARN_STREAM("Handshake Message send failed");

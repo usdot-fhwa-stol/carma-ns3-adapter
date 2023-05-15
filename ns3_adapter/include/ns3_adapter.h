@@ -17,6 +17,7 @@
  */
 
 #include "ns3_client.h"
+#include "ns3_reg_client.h"
 #include <boost/asio.hpp>
 #include <boost/signals2/signal.hpp>
 #include <boost/lambda/lambda.hpp>
@@ -109,6 +110,7 @@ class NS3Adapter : public cav::DriverApplication
         //std::shared_ptr<dynamic_reconfigure::Server<dsrc::DSRCConfig>> dyn_cfg_server_;
         boost::recursive_mutex dyn_cfg_mutex_;
         NS3Client ns3_client_;
+        NS3RegClient ns3_reg_client_;
 
         std::deque<std::shared_ptr<std::vector<uint8_t>>> send_msg_queue_;
         bool connecting_ = false;
