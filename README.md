@@ -4,8 +4,8 @@
 
 
 
-# CARMACohdaDsrcDriver
-CARMACohdaDsrcDriver is the driver for use with a Cohda Dedicated Short-Range Radio On-board Units (DSRC OBU) and the CARMA Platform
+# CARMA NS3 Adapter
+CARMA NS3 Adapter is a simulated communications device driver for usage with the CARMA Platform to enable connection with CDASim. This driver will register with the simulation environment to initialize a virtual radio and utilize that connection to send and receive V2X messages in the simulated spectrum within NS3.
 
 To add this driver to your CARMAPlatform project simply clone this repository into your Catkin workspace
 

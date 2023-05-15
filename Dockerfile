@@ -31,12 +31,12 @@ ARG VERSION="NULL"
 ARG VCS_REF="NULL"
 
 LABEL org.label-schema.schema-version="1.0"
-LABEL org.label-schema.name="carma-cohda-dsrc-driver"
-LABEL org.label-schema.description="Cohda DSRC On-Board Unit comms driver for the CARMA Platform"
+LABEL org.label-schema.name="carma-ns3-adapter"
+LABEL org.label-schema.description="Simulated communications driver for usage with CARMA Platform and CDASim"
 LABEL org.label-schema.vendor="Leidos"
 LABEL org.label-schema.version=${VERSION}
 LABEL org.label-schema.url="https://highways.dot.gov/research/research-programs/operations/CARMA"
-LABEL org.label-schema.vcs-url="https://github.com/usdot-fhwa-stol/carma-cohda-dsrc-driver/"
+LABEL org.label-schema.vcs-url="https://github.com/usdot-fhwa-stol/carma-ns3-adapter/"
 LABEL org.label-schema.vcs-ref=${VCS_REF}
 LABEL org.label-schema.build-date=${BUILD_DATE}
 
