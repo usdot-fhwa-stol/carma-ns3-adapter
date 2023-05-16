@@ -40,7 +40,7 @@ LABEL org.label-schema.vcs-url="https://github.com/usdot-fhwa-stol/carma-ns3-ada
 LABEL org.label-schema.vcs-ref=${VCS_REF}
 LABEL org.label-schema.build-date=${BUILD_DATE}
 
-COPY --from=setup /home/carma/install /opt/carma/install
+COPY --from=setup /opt/carma/install /opt/carma/install
 RUN sudo chmod -R +x /opt/carma/install
 
 CMD  [ "wait-for-it.sh", "localhost:11311", "--", "roslaunch", "ns3_adapter", "ns3_adapter.launch", "remap_ns:=/saxton_cav/drivers" ]

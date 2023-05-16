@@ -19,9 +19,9 @@
     <arg name="dsrc_address" default="127.0.01" />
     <arg name="dsrc_listening_port" default="1516" />
     <arg name="listening_port" default="5398" />
-    <arg name="wave_cfg_file" default="$(find ns3_adapter)/etc/wave.json" />
+    <arg name="wave_cfg_file" default="$(find ns3_adapter)/config/wave.json" />
 
-    <node name="ns3-adapter" pkg="ns3_adapter" type="ns3_adapter_node" output="screen">
+    <node name="ns3_adapter" pkg="ns3_adapter" type="ns3_adapter" output="screen">
         <param name="dsrc_address" value="$(arg dsrc_address)" />
         <param name="dsrc_listening_port" value="$(arg dsrc_listening_port)" />
         <param name="listening_port" value="$(arg listening_port)" />
