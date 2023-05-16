@@ -1,6 +1,6 @@
 #include <iostream>
 #include <functional>
-#include "ns3_client.h"
+#include "ns3_reg_client.h"
 
 NS3RegClient::NS3RegClient() :
     running_(false)
