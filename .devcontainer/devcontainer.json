@@ -26,10 +26,10 @@
 	// "forwardPorts": [],
 
 	// Uncomment the next line to run commands after the container is created.
-	"postCreateCommand": "./docker/checkout.bash && sudo mv /home/carma/src/* /workspaces/"
+	"postCreateCommand": "./docker/checkout.bash && sudo mv /home/carma/src/* /workspaces/ && sudo chown -R carma:carma /workspaces"
 	// Configure tool-specific properties.
 	// "customizations": {},
 
 	// Uncomment to connect as an existing user other than the container default. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "devcontainer"
+	//"remoteUser": "carma"
 }
