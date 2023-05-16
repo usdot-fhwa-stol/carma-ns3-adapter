@@ -26,6 +26,7 @@ jobs:
       run: mv $GITHUB_WORKSPACE/src /opt/carma/
     - name: Checkout dependencies
       run: |
+        chmod +x ./src/carma-ns3-adapter/docker/checkout.bash
         source "$INIT_ENV"
         ./src/${{ github.event.repository.name }}/docker/checkout.bash -r /opt/carma/
     - name: Build
