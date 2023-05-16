@@ -77,7 +77,7 @@ void NS3Adapter::initialize() {
     ns3_client_.onMessageReceived.connect([this](std::vector<uint8_t> const &msg, uint16_t id) {onMessageReceivedHandler(msg, id); });
     
     // spin_rate = 50; TODO: temporaty change for test
-    spin_rate = 1;
+    spin_rate = 10;
 }
 
 void NS3Adapter::onConnectHandler() {
@@ -256,13 +256,6 @@ void NS3Adapter::pre_spin()
     //TODO: Set up functionality for disconnected NS-3
     if (!connecting_ && !ns3_client_.connected())
     {
-        //if (!handshake_sent_)
-        //{
-            ns3_reg_client_.connect(ns3_address_, ns3_registration_port_);
-            std::string handshake_msg = compose_handshake_msg(vehicle_id_, role_id_, std::to_string(ns3_broadcasting_port_), host_ip_);
-            broadcastHandshakemsg(handshake_msg);
-            //handshake_sent_ = true;
-        //}
         connecting_ = true;
         if (connect_thread_)
             connect_thread_->join();
@@ -298,8 +291,13 @@ void NS3Adapter::pre_spin()
             connecting_ = false;
         }));
     }
-
-    
+    //if (!handshake_sent_)
+    //{
+    ns3_reg_client_.connect(ns3_address_, ns3_registration_port_);
+    std::string handshake_msg = compose_handshake_msg(vehicle_id_, role_id_, std::to_string(ns3_broadcasting_port_), host_ip_);
+    broadcastHandshakemsg(handshake_msg);
+    //handshake_sent_ = true;
+    //}
 }
 
 
@@ -482,8 +480,6 @@ void NS3Adapter::broadcastHandshakemsg(const std::string& msg_string)
     else {
         ROS_WARN_STREAM("Handshake Message successfully");
     }
-    ns3_client_.close();
-    
 }
 
 cav_msgs::DriverStatus NS3Adapter::getDriverStatus()
