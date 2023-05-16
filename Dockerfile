@@ -21,8 +21,6 @@ ENV ROS2_PACKAGES=${ROS2_PACKAGES}
 
 RUN mkdir ~/src
 COPY --chown=carma . /home/carma/src/
-RUN sudo pwd && ls -la
-RUN sudo chmod -R +x /src/docker/checkout.bash
 RUN ~/src/docker/checkout.bash
 RUN ~/src/docker/install.sh
 
@@ -42,7 +40,7 @@ LABEL org.label-schema.vcs-url="https://github.com/usdot-fhwa-stol/carma-ns3-ada
 LABEL org.label-schema.vcs-ref=${VCS_REF}
 LABEL org.label-schema.build-date=${BUILD_DATE}
 
-COPY --from=setup /home/carma/install /opt/carma/install
+COPY --from=setup /opt/carma/install /opt/carma/install
 RUN sudo chmod -R +x /opt/carma/install
 
-CMD  [ "wait-for-it.sh", "localhost:11311", "--", "roslaunch", "dsrc_driver", "dsrc_node.launch", "remap_ns:=/saxton_cav/drivers" ]
+CMD  [ "wait-for-it.sh", "localhost:11311", "--", "roslaunch", "ns3_adapter", "ns3_adapter.launch", "remap_ns:=/hardware_interface/comms" ]
