@@ -3,7 +3,8 @@ name: DockerHub
 on:
   push:
     branches:
-      - "carma-develop"
+      - "develop"
+      - "master"
 
 jobs:
   docker:
