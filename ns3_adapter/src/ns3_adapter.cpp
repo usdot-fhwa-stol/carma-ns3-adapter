@@ -45,6 +45,7 @@ void NS3Adapter::initialize() {
     pnh.param<int>("ns3_registration_port", ns3_registration_port_, 1515);
     pnh.param<int>("ns3_broadcasting_port", ns3_broadcasting_port_, 1516);
     pnh.param<int>("ns3_listening_port", ns3_listening_port_, 2500);
+    pnh.param<std::string>("host_ip", host_ip_, "127.0.0.1");
 
     // std::string handshake_msg = compose_handshake_msg(vehicle_id_, role_id_, std::to_string(ns3_broadcasting_port), host_ip_);
     // ROS_WARN_STREAM("handshake: " << handshake_msg);
