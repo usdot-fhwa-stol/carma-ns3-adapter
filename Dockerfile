@@ -21,8 +21,8 @@ ENV ROS2_PACKAGES=${ROS2_PACKAGES}
 
 RUN mkdir ~/src
 COPY --chown=carma . /home/carma/src/
-RUN chmod u+x ~/src/docker/checkout.bash
-RUN chmod u+x ~/src/docker/install.sh
+RUN ~/src/docker/checkout.bash
+RUN ~/src/docker/install.sh
 
 FROM usdotfhwastoldev/carma-base:develop
 
