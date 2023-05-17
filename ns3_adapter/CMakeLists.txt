@@ -22,10 +22,11 @@ add_executable( ${PROJECT_NAME}
   ${headers}
   src/ns3_client.cpp
   src/ns3_adapter.cpp
+  src/ns3_reg_client.cpp
   src/driver_application/driver_application.cpp
   src/driver_wrapper/driver_wrapper.cpp
   src/main.cpp)
-add_library(ns3_adapter_library src/ns3_adapter.cpp src/ns3_client.cpp src/main.cpp src/driver_application/driver_application.cpp src/driver_wrapper/driver_wrapper.cpp)
+add_library(ns3_adapter_library src/ns3_adapter.cpp src/ns3_client.cpp src/ns3_reg_client.cpp src/main.cpp src/driver_application/driver_application.cpp src/driver_wrapper/driver_wrapper.cpp)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 add_dependencies(ns3_adapter_library ${catkin_EXPORTED_TARGETS})

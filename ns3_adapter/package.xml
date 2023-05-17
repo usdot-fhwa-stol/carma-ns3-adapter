@@ -35,7 +35,7 @@
   <depend>cav_msgs</depend>
   <depend>cav_srvs</depend>
   <exec_depend>roscpp</exec_depend>
-	<exec_depend>dynamic_reconfigure</exec_depend>
+  <exec_depend>dynamic_reconfigure</exec_depend>
   <exec_depend>bondcpp</exec_depend>
 
   
