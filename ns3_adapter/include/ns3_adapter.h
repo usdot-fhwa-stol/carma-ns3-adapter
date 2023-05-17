@@ -92,7 +92,7 @@ class NS3Adapter : public cav::DriverApplication
         // Confirm these values
         std::string vehicle_id_;
         // vehicle role id in carla
-        std::string role_id_ = "ego_vehicle";
+        std::string role_id_ = "carma_1";
         
         std::string host_ip_ = "127.0.0.1";
 
