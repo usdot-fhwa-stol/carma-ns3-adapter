@@ -1,5 +1,6 @@
 wave_cfg_file: "config/wave.json"
 ns3_address: "127.0.0.1"
+host_ip: "127.0.0.1"
 ns3_registration_port: 1515
 ns3_listening_port: 2500 
 ns3_broadcasting_port: 1516
