@@ -41,11 +41,11 @@ void NS3Adapter::initialize() {
     // Start the handshake
     pnh_->getParam("/vehicle_id", vehicle_id_);  
     pnh_->getParam("carla/ego_vehicle/role_name", role_id_);
-    pnh.param<std::string>("ns3_address", ns3_address_, "127.0.0.1");
+    pnh.param<std::string>("ns3_address", ns3_address_, "172.2.0.2");
     pnh.param<int>("ns3_registration_port", ns3_registration_port_, 1515);
     pnh.param<int>("ns3_broadcasting_port", ns3_broadcasting_port_, 1516);
     pnh.param<int>("ns3_listening_port", ns3_listening_port_, 2500);
-    pnh.param<std::string>("host_ip", host_ip_, "127.0.0.1");
+    pnh.param<std::string>("host_ip", host_ip_, "172.2.0.3");
 
     // std::string handshake_msg = compose_handshake_msg(vehicle_id_, role_id_, std::to_string(ns3_broadcasting_port), host_ip_);
     // ROS_WARN_STREAM("handshake: " << handshake_msg);
@@ -289,6 +289,7 @@ void NS3Adapter::pre_spin()
 
     ns3_reg_client_.connect(ns3_address_, ns3_registration_port_);
     std::string handshake_msg = compose_handshake_msg(vehicle_id_, role_id_, std::to_string(ns3_listening_port_), host_ip_);
+    ROS_WARN_STREAM("handshake_msg: " << handshake_msg);
     broadcastHandshakemsg(handshake_msg);
 }
 
@@ -448,6 +449,8 @@ void NS3Adapter::broadcastHandshakemsg(const std::string& msg_string)
     unsigned short remote_port;
     
     bool success = ns3_reg_client_.registermsg(message_content, ns3_address_, ns3_registration_port_, local_port_);
+    ROS_WARN_STREAM("ns3_address_: " << ns3_address_);
+    ROS_WARN_STREAM("ns3_registration_port_: " << ns3_registration_port_);
     ROS_WARN_STREAM("Handshake Message success: " << success);
     if (!success) {
         ROS_WARN_STREAM("Handshake Message send failed");
