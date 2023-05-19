@@ -94,9 +94,9 @@ class NS3Adapter : public cav::DriverApplication
         // vehicle role id in carla
         std::string role_id_ = "carma_1";
         
-        std::string host_ip_ = "127.0.0.1";
+        std::string host_ip_ = "172.2.0.3";
 
-        std::string ns3_address_ = "127.0.0.1";
+        std::string ns3_address_ = "172.2.0.2";
         int ns3_registration_port_ = 1515;
         int ns3_listening_port_ = 2500;
         int ns3_broadcasting_port_ = 1516;
