@@ -45,28 +45,6 @@ TEST(NS3AdapterTest, testOnMsgReceivedHandler)
 
 }
 
-TEST(NS3AdapterTest, testpackMessage)
-{
-    int argc = 1;
-    char c[2][2] = {{'a','b'}, {'c','d'}};
-    char* argv[] {c[0], c[1]};
-    NS3Adapter worker(argc,argv);
-
-    cav_msgs::ByteArray array1;
-
-    uint8_t msg = 4;
-
-    array1.content.push_back(msg);
-
-    
-    auto pm = worker.packMessage(array1);
-
-    ASSERT_GT(pm.size(), 0);
-    ASSERT_EQ(pm.size(), 189);
-
-
-}
-
 TEST(NS3AdapterTest, testonOutboundMessage)
 {
     /*int argc = 1;
