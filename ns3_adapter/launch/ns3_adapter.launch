@@ -30,6 +30,6 @@
       <param name="dsrc_listening_port" value="$(arg dsrc_listening_port)" />
       <param name="listening_port" value="$(arg listening_port)" />
       <param name="wave_cfg_file" value="$(arg wave_cfg_file)" />
-      <param name="role_id" value="$(arg role_id)">
+      <param name="role_id" value="$(arg role_id)" />
     </node>
 </launch>
