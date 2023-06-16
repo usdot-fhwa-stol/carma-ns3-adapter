@@ -12,7 +12,7 @@
 #  License for the specific language governing permissions and limitations under
 #  the License.
 
-FROM usdotfhwastoldev/carma-base:develop as setup
+FROM usdotfhwastol/carma-base:carma-system-4.4.3 as setup
 
 ARG ROS1_PACKAGES=""
 ENV ROS1_PACKAGES=${ROS1_PACKAGES}
