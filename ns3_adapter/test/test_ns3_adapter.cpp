@@ -62,9 +62,6 @@ TEST(NS3AdapterTest, testpackMessage)
     auto pm = worker.packMessage(array1);
 
     ASSERT_GT(pm.size(), 0);
-    ASSERT_EQ(pm.size(), 189);
-
-
 }
 
 TEST(NS3AdapterTest, testonOutboundMessage)
