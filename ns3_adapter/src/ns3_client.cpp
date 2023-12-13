@@ -14,15 +14,15 @@ NS3Client::~NS3Client() {
 }
 
 bool NS3Client::registermsg(const std::shared_ptr<std::vector<uint8_t>>&message, const std::string &remote_address, unsigned short remote_port,
-                            unsigned short local_port)
+                            unsigned short local_v2x_port, unsigned short local_time_port)
 {
     bool success = false;
-    
-    if (connect(remote_address, remote_port, local_port))
+
+    if (connect(remote_address, remote_port, local_v2x_port, local_time_port))
     {
         bool send_success = sendNS3Message(message);
         if (send_success)
-        { 
+        {
             // ROS_DEBUG_STREAM("Handshake Message sent successfully");
             success = true;
         }
@@ -33,20 +33,21 @@ bool NS3Client::registermsg(const std::shared_ptr<std::vector<uint8_t>>&message,
 
 
     // close();
-    
+
     return success;
 }
 
 
 bool NS3Client::connect(const std::string &remote_address, unsigned short remote_port,
-                            unsigned short local_port) {
+                            unsigned short local_v2x_port, unsigned short local_time_port) {
     boost::system::error_code ignored_ec;
-    return connect(remote_address, remote_port, local_port, ignored_ec);
+    return connect(remote_address, remote_port, local_v2x_port, local_time_port, ignored_ec);
 }
 
 bool NS3Client::connect(const std::string &remote_address,
                                 unsigned short remote_port,
-                                 unsigned short local_port,
+                                 unsigned short local_v2x_port,
+                                 unsigned short local_time_port,
                                  boost::system::error_code &ec)
 {
     //If we are already connected return false
@@ -61,38 +62,63 @@ bool NS3Client::connect(const std::string &remote_address,
         throw e;
     }
 
-    ec.clear(); 
+    ec.clear();
 
     io_.reset(new boost::asio::io_service());
     output_strand_.reset(new boost::asio::io_service::strand(*io_));
 
-    //build the udp listener, this class listens on address::port and sends packets through onReceive
+    //V2X RECEIVER: build the udp listener, this class listens on address::port and sends packets through onReceive
     try
     {
-        if(udp_listener_){
-            udp_listener_.reset(nullptr);
-            
+        if(udp_v2x_listener_){
+            udp_v2x_listener_.reset(nullptr);
+
         }
-        udp_listener_.reset(new cav::UDPListener(*io_,local_port));
+        udp_v2x_listener_.reset(new cav::UDPListener(*io_,local_v2x_port));
     }catch(boost::system::system_error e)
     {
         ec = e.code();
-        std::cerr << "NS3Client::connect threw system_error : " << e.what() <<std::endl;
+        std::cerr << "NS3Client::connect on v2x port threw system_error : " << e.what() <<std::endl;
         return false;
     }
     catch(std::exception e)
     {
-        std::cerr << "NS3Client::connect threw exception : " << e.what() <<std::endl;
+        std::cerr << "NS3Client::connect on v2x port threw exception : " << e.what() <<std::endl;
         return false;
     };
 
     //connect signals
-    udp_listener_->onReceive.connect([this](const std::shared_ptr<const std::vector<uint8_t>>& data){process(data);});
+    udp_v2x_listener_->onReceive.connect([this](const std::shared_ptr<const std::vector<uint8_t>>& data){process(data);});
+
+    //TIME RECEIVER: build the udp listener, this class listens on address::port and sends packets through onReceive
+    try
+    {
+        if(udp_time_listener_){
+            udp_time_listener_.reset(nullptr);
+
+        }
+        udp_time_listener_.reset(new cav::UDPListener(*io_,local_time_port));
+    }catch(boost::system::system_error e)
+    {
+        ec = e.code();
+        std::cerr << "NS3Client::connect on time port threw system_error : " << e.what() <<std::endl;
+        return false;
+    }
+    catch(std::exception e)
+    {
+        std::cerr << "NS3Client::connect on time port threw exception : " << e.what() <<std::endl;
+        return false;
+    };
+
+    //connect signals
+    udp_time_listener_->onReceive.connect([this](const std::shared_ptr<const std::vector<char>>& data){process_time(data);});
 
     udp_out_socket_.reset(new boost::asio::ip::udp::socket(*io_,remote_udp_ep_.protocol()));
     work_.reset(new boost::asio::io_service::work(*io_));
     // run the io service
-    udp_listener_->start();
+    udp_v2x_listener_->start();
+    udp_time_listener_->start();
+
     io_thread_.reset(new std::thread([this]()
                                      {
                                          boost::system::error_code err;
@@ -113,9 +139,32 @@ void NS3Client::close() {
     work_.reset();
     io_->stop();
     io_thread_->join();
-    udp_listener_->stop();
+    udp_v2x_listener_->stop();
+    udp_time_listener_->stop();
     udp_out_socket_.reset();
     onDisconnect();
+}
+
+void NS3Client::process_time(const std::shared_ptr<const std::vector<char>>& data)
+{
+    std::string json_string(data.data());
+    // JSON
+    rapidjson::Document obj;
+    std::string timestep_member_name = "timestep";
+    obj.Parse(json_string);
+    if (obj.HasParseError())
+    {
+        // TODO: Change to json_document_parse_exception. Requires changes to services and unit tests
+        throw json_parse_exception("Message JSON is misformatted. JSON parsing failed!");
+    }
+
+    std::optional<unsigned long> result;
+    if (obj.HasMember(timestep_member_name.c_str()) && obj.FindMember(timestep_member_name.c_str())->value.IsUint64())
+    {
+        result = obj[timestep_member_name.c_str()].GetUint64();
+    }
+
+    onTimeReceived(result);
 }
 
 void NS3Client::process(const std::shared_ptr<const std::vector<uint8_t>>& data)

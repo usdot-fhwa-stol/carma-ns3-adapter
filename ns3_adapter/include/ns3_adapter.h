@@ -17,7 +17,6 @@
  */
 
 #include "ns3_client.h"
-#include "ns3_reg_client.h"
 #include <boost/asio.hpp>
 #include <boost/signals2/signal.hpp>
 #include <boost/lambda/lambda.hpp>
@@ -28,7 +27,7 @@
 #include <thread>
 #include <queue>
 #include <vector>
-
+#include <rosgraph_msgs/Clock.h>
 #include <cav_msgs/ByteArray.h>
 #include <cav_srvs/SendMessage.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -81,6 +80,7 @@ class NS3Adapter : public cav::DriverApplication
 
         //ROS
         ros::Publisher comms_pub_;
+        ros::Publisher time_pub_;
         ros::Subscriber comms_sub_;
         ros::Subscriber pose_sub_;
         ros::ServiceServer comms_srv_;
@@ -93,24 +93,23 @@ class NS3Adapter : public cav::DriverApplication
         std::string vehicle_id_;
         // vehicle role id in carla
         std::string role_id_ = "carma_1";
-        
+
         std::string host_ip_ = "172.2.0.3";
 
         std::string ns3_address_ = "172.2.0.2";
         int ns3_registration_port_ = 1515;
-        int ns3_listening_port_ = 2500;
+        int ns3_v2x_listening_port_ = 2500;
+        int ns3_time_listening_port_ = 2501;
         int ns3_broadcasting_port_ = 1516;
-        int local_port_ = 2000;
 
         bool handshake_sent_ = false;
- 
+
 
         //dynamic reconfig
         std::mutex cfg_mutex_;
         //std::shared_ptr<dynamic_reconfigure::Server<dsrc::DSRCConfig>> dyn_cfg_server_;
         boost::recursive_mutex dyn_cfg_mutex_;
         NS3Client ns3_client_;
-        NS3RegClient ns3_reg_client_;
 
         std::deque<std::shared_ptr<std::vector<uint8_t>>> send_msg_queue_;
         bool connecting_ = false;
@@ -154,7 +153,7 @@ class NS3Adapter : public cav::DriverApplication
         inline virtual std::vector<std::string>& get_api() override  { return api_; }
 
 
-    public: 
+    public:
         /**
         * @brief Handles the NS-3 onConnect Event
         *
@@ -229,7 +228,7 @@ class NS3Adapter : public cav::DriverApplication
         * @param fileName
         * @return the json string for the msg
         */
-        std::string compose_handshake_msg(std::string veh_id, std::string role_id, std::string port, std::string ip);
+        std::string compose_handshake_msg(std::string veh_id, std::string role_id, std::string message_port, std::string time_port, std::string ip);
 
         void broadcastHandshakemsg(const std::string& msg_string);
 

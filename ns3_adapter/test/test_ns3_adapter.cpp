@@ -39,7 +39,7 @@ TEST(NS3AdapterTest, testOnMsgReceivedHandler)
 
     ROS_ERROR_STREAM("Pre-Connection NS-3 Status: " << static_cast<int>(worker.getDriverStatus().status));
     EXPECT_THROW(worker.onMessageReceivedHandler(content, id), ros::TimeNotInitializedException); //Since the onMessageReceivedHandler requires ros::Time initialized, this should throw an exception
-    
+
     EXPECT_EQ(worker.getDriverStatus().status, cav_msgs::DriverStatus::OFF);
 
 
@@ -58,7 +58,7 @@ TEST(NS3AdapterTest, testpackMessage)
 
     array1.content.push_back(msg);
 
-    
+
     auto pm = worker.packMessage(array1);
 
     ASSERT_GT(pm.size(), 0);
@@ -115,6 +115,6 @@ TEST(NS3AdapterTest, testcompose_handshake_msg)
     char c[2][2] = {{'a','b'}, {'c','d'}};
     char* argv[] {c[0], c[1]};
     NS3Adapter worker(argc,argv);
-    std::string result = worker.compose_handshake_msg("default_id", "ego1", "2000", "127.0.0.1");
+    std::string result = worker.compose_handshake_msg("default_id", "ego1", "2000", "2001", "127.0.0.1");
     std::cout << result << std::endl;
 }
