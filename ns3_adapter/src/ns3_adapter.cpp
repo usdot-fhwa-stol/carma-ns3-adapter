@@ -433,17 +433,17 @@ std::string NS3Adapter::compose_handshake_msg(std::string veh_id, std::string ro
 	roletextPart.SetString(role_id.c_str(), allocator);
     document.AddMember("carlaVehicleRole", roletextPart, allocator);
 
-    rapidjson::Value porttextPart;
-	porttextPart.SetString(message_port.c_str(), allocator);
-    document.AddMember("rxMessagePort", porttextPart, allocator);
-
     rapidjson::Value iptextPart;
 	iptextPart.SetString(ip.c_str(), allocator);
     document.AddMember("rxMessageIpAddress", iptextPart, allocator);
 
+    rapidjson::Value porttextPart;
+	porttextPart.SetString(message_port.c_str(), allocator);
+    document.AddMember("rxMessagePort", porttextPart, allocator);
+
     rapidjson::Value portTimePart;
 	portTimePart.SetString(time_port.c_str(), allocator);
-    document.AddMember("rxTimePort", portTimePart, allocator);
+    document.AddMember("rxTimeSyncPort", portTimePart, allocator);
 
     rapidjson::StringBuffer strbuf;
 	rapidjson::Writer<rapidjson::StringBuffer> writer(strbuf);
