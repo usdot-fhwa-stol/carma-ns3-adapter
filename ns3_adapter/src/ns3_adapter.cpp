@@ -44,8 +44,8 @@ void NS3Adapter::initialize() {
     pnh.param<std::string>("ns3_address", ns3_address_, "172.2.0.2");
     pnh.param<int>("ns3_registration_port", ns3_registration_port_, 1515);
     pnh.param<int>("ns3_broadcasting_port", ns3_broadcasting_port_, 1516);
-    pnh.param<int>("ns3_v2x_listening_port", ns3_v2x_listening_port, 2500);
-    pnh.param<int>("ns3_time_sync_listening_port", ns3_time_sync_listening_port, 2501);
+    pnh.param<int>("ns3_v2x_listening_port", ns3_v2x_listening_port_, 2500);
+    pnh.param<int>("ns3_time_sync_listening_port", ns3_time_listening_port_, 2501);
     pnh.param<std::string>("host_ip", host_ip_, "172.2.0.3");
 
     //Setup connection handlers
@@ -67,7 +67,7 @@ void NS3Adapter::initialize() {
     api_.push_back(comms_pub_.getTopic());
 
     //Time publisher
-    time_pub_ = comms_api_nh_->advertise<ros::Time>("clock", queue_size_);
+    time_pub_ = comms_api_nh_->advertise<rosgraph_msgs::Clock>("/clock", queue_size_);
     api_.push_back(time_pub_.getTopic());
 
     //Comms Service
@@ -98,12 +98,11 @@ void NS3Adapter::onDisconnectHandler() {
 
 void NS3Adapter::onTimeReceivedHandler(unsigned long timestamp)
 {
-    //TODO: DECODE time from data
     rosgraph_msgs::Clock time_now;
-    //time_now.time.seconds = static_cast<int>(timestamp / 1e9);
-    //time_now.time.nseconds = static_cast<int>(timestamp / 1e9);
+    time_now.clock.sec = static_cast<int>(timestamp / 1e9);
+    time_now.clock.nsec = timestamp - time_now.clock.sec * 1e9;
 
-    time_pub_->(time_now);
+    time_pub_.publish(time_now);
 }
 
 /**
@@ -285,7 +284,7 @@ void NS3Adapter::pre_spin()
             ROS_INFO("Local port: %u", ns3_broadcasting_port_);
             try {
                 if (!ns3_client_.connect(ns3_address_, ns3_broadcasting_port_,
-                                          ns3_v2x_listening_port_, ec))
+                                          ns3_v2x_listening_port_, ns3_time_listening_port_, ec))
                 {
                     ROS_WARN_STREAM("Failed to connect, err: " << ec.message());
                 }
@@ -299,7 +298,7 @@ void NS3Adapter::pre_spin()
         }));
     }
 
-    ns3_client_.connect(ns3_address_, ns3_registration_port_);
+    ns3_client_.connect(ns3_address_, ns3_registration_port_, ns3_v2x_listening_port_, ns3_time_listening_port_);
     std::string handshake_msg = compose_handshake_msg(vehicle_id_, role_id_, std::to_string(ns3_v2x_listening_port_), std::to_string(ns3_time_listening_port_), host_ip_);
     ROS_WARN_STREAM("handshake_msg: " << handshake_msg);
     broadcastHandshakemsg(handshake_msg);
@@ -461,7 +460,7 @@ void NS3Adapter::broadcastHandshakemsg(const std::string& msg_string)
     auto msg_vector = std::vector<uint8_t>(msg_string.begin(), msg_string.end());
     std::shared_ptr<std::vector<uint8_t>> message_content = std::make_shared<std::vector<uint8_t>>(std::move(msg_vector));
 
-    bool success = ns3_client_.registermsg(message_content, ns3_address_, ns3_registration_port_, ns3_v2x_listening_port_, ns3_time_listening_port_);
+    bool success = ns3_client_.registermsg(message_content);
     ROS_WARN_STREAM("ns3_address_: " << ns3_address_);
     ROS_WARN_STREAM("ns3_registration_port_: " << ns3_registration_port_);
     ROS_WARN_STREAM("ns3_v2x_listening_port_: " << ns3_v2x_listening_port_);

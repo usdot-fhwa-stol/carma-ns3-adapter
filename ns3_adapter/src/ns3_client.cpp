@@ -13,28 +13,9 @@ NS3Client::~NS3Client() {
     }catch(...){}
 }
 
-bool NS3Client::registermsg(const std::shared_ptr<std::vector<uint8_t>>&message, const std::string &remote_address, unsigned short remote_port,
-                            unsigned short local_v2x_port, unsigned short local_time_port)
+bool NS3Client::registermsg(const std::shared_ptr<std::vector<uint8_t>>&message)
 {
-    bool success = false;
-
-    if (connect(remote_address, remote_port, local_v2x_port, local_time_port))
-    {
-        bool send_success = sendNS3Message(message);
-        if (send_success)
-        {
-            // ROS_DEBUG_STREAM("Handshake Message sent successfully");
-            success = true;
-        }
-        // else ROS_DEBUG_STREAM("Handshake Message send failed");
-    }
-    // else ROS_DEBUG_STREAM( "Connection failed" );
-    else std::cerr << "Connection failed" << std::endl;
-
-
-    // close();
-
-    return success;
+    return sendNS3Message(message);
 }
 
 
@@ -111,7 +92,7 @@ bool NS3Client::connect(const std::string &remote_address,
     };
 
     //connect signals
-    udp_time_listener_->onReceive.connect([this](const std::shared_ptr<const std::vector<char>>& data){process_time(data);});
+    udp_time_listener_->onReceive.connect([this](const std::shared_ptr<const std::vector<uint8_t>>& data){process_time(data);});
 
     udp_out_socket_.reset(new boost::asio::ip::udp::socket(*io_,remote_udp_ep_.protocol()));
     work_.reset(new boost::asio::io_service::work(*io_));
@@ -145,9 +126,10 @@ void NS3Client::close() {
     onDisconnect();
 }
 
-void NS3Client::process_time(const std::shared_ptr<const std::vector<char>>& data)
+void NS3Client::process_time(const std::shared_ptr<const std::vector<uint8_t>>& data)
 {
-    std::string json_string(data.data());
+    const std::vector<uint8_t> vec = *data;
+    std::string json_string(vec.begin(), vec.end());
     // JSON
     rapidjson::Document obj;
     std::string timestep_member_name = "timestep";
@@ -155,7 +137,7 @@ void NS3Client::process_time(const std::shared_ptr<const std::vector<char>>& dat
     if (obj.HasParseError())
     {
         // TODO: Change to json_document_parse_exception. Requires changes to services and unit tests
-        throw json_parse_exception("Message JSON is misformatted. JSON parsing failed!");
+        throw std::runtime_error("Message JSON is misformatted. JSON parsing failed!");
     }
 
     std::optional<unsigned long> result;
@@ -164,7 +146,7 @@ void NS3Client::process_time(const std::shared_ptr<const std::vector<char>>& dat
         result = obj[timestep_member_name.c_str()].GetUint64();
     }
 
-    onTimeReceived(result);
+    onTimeReceived(result.value());
 }
 
 void NS3Client::process(const std::shared_ptr<const std::vector<uint8_t>>& data)

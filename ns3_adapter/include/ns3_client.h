@@ -24,7 +24,9 @@
 #include <thread>
 #include <queue>
 #include <vector>
-
+#include <rapidjson/document.h>
+#include <rapidjson/rapidjson.h>
+#include <optional>
 
 #include "udp_listener.h"
 
@@ -41,15 +43,9 @@ public:
     /**
     * @brief connects and send handshake message to MOSAIC CARMA Ambassador
     * @param message udp message
-    * @param remote_address IPv4 address of OBU
-    * @param remote_port of client service
-    * @param local_v2x_port of client v2x service
-    * @param local_time_port of client time service
     * @return true on sucessful connect, false otherwise
     */
-    bool registermsg(const std::shared_ptr<std::vector<uint8_t>>&message,
-                const std::string &remote_address, unsigned short remote_port,
-                unsigned short local_v2x_port, unsigned short local_time_port);
+    bool registermsg(const std::shared_ptr<std::vector<uint8_t>>&message);
 
     /**
     * @brief Connects the driver to the OBU at the provided IPv4 address and Port
@@ -63,7 +59,7 @@ public:
                         unsigned short local_v2x_port, unsigned short local_time_port, boost::system::error_code &ec);
 
 
-    bool connect(const std::string &remote_address, unsigned short local_v2x_port, unsigned short local_time_port);
+    bool connect(const std::string &remote_address, unsigned short remote_port, unsigned short local_v2x_port, unsigned short local_time_port);
 
     /**
     * @brief Closes connection
@@ -135,5 +131,5 @@ private:
     void process(const std::shared_ptr<const std::vector<uint8_t>> &data);
 
     // TODO
-    void process_time(const std::shared_ptr<const std::vector<char>> &data);
+    void process_time(const std::shared_ptr<const std::vector<uint8_t>> &data);
 };

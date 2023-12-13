@@ -176,6 +176,9 @@ class NS3Adapter : public cav::DriverApplication
         */
         void onMessageReceivedHandler(const std::vector<uint8_t> &data, uint16_t id);
 
+        // TODO
+        void onTimeReceivedHandler(unsigned long);
+
         /**
         * @brief Packs an outgoing message into J2375 standard.
         * @param message

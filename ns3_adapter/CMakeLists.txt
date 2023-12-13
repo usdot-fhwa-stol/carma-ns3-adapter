@@ -13,10 +13,12 @@ find_package(catkin REQUIRED COMPONENTS
   ##cav_driver_utils
   cav_msgs
   cav_srvs
+  rosgraph_msgs
   roscpp
   bondcpp
   dynamic_reconfigure
 )
+add_definitions(-DRAPIDJSON_HAS_STDSTRING=1)
 
 add_executable( ${PROJECT_NAME}
   ${headers}
