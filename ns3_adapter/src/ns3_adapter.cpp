@@ -45,7 +45,7 @@ void NS3Adapter::initialize() {
     pnh.param<int>("ns3_registration_port", ns3_registration_port_, 1515);
     pnh.param<int>("ns3_broadcasting_port", ns3_broadcasting_port_, 1516);
     pnh.param<int>("ns3_v2x_listening_port", ns3_v2x_listening_port_, 2500);
-    pnh.param<int>("ns3_time_sync_listening_port", ns3_time_listening_port_, 2501);
+    pnh.param<int>("ns3_time_listening_port", ns3_time_listening_port_, 2501);
     pnh.param<std::string>("host_ip", host_ip_, "172.2.0.3");
 
     //Setup connection handlers
