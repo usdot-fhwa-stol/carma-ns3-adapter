@@ -99,6 +99,7 @@ void NS3Adapter::onDisconnectHandler() {
 void NS3Adapter::onTimeReceivedHandler(unsigned long timestamp)
 {
     rosgraph_msgs::Clock time_now;
+    ROS_ERROR_STREAM("Received timestamp! " << std::to_string(timestamp));
     time_now.clock.sec = static_cast<int>(timestamp / 1e9);
     time_now.clock.nsec = timestamp - time_now.clock.sec * 1e9;
 
@@ -281,9 +282,11 @@ void NS3Adapter::pre_spin()
             ROS_ERROR_STREAM("Attempting to connect to NS3");
             boost::system::error_code ec;
            // ROS_INFO("Connecting to %s:%u", cfg.dsrc_address.c_str(), cfg.dsrc_listening_port);
-            ROS_ERROR("Remote port: %u", ns3_broadcasting_port_);
+            ROS_ERROR("Remote broadcasting port: %u", ns3_broadcasting_port_);
+            ROS_ERROR("Remote registration port: %u", ns3_registration_port_);
+
             try {
-                if (!ns3_client_.connect(ns3_address_, ns3_broadcasting_port_,
+                if (!ns3_client_.connect_registration_and_broadcasting(ns3_address_, ns3_broadcasting_port_, ns3_registration_port_,
                                           ns3_v2x_listening_port_, ns3_time_listening_port_, ec))
                 {
                     ROS_ERROR_STREAM("Failed to connect, err: " << ec.message());
@@ -296,7 +299,7 @@ void NS3Adapter::pre_spin()
         }));
     }
 
-    ns3_client_.connect(ns3_address_, ns3_registration_port_);
+    //ns3_client_.connect_registration(ns3_address_, ns3_registration_port_);
     std::string handshake_msg = compose_handshake_msg(vehicle_id_, role_id_, std::to_string(ns3_v2x_listening_port_), std::to_string(ns3_time_listening_port_), host_ip_);
     ROS_ERROR_STREAM("handshake_msg: " << handshake_msg);
     broadcastHandshakemsg(handshake_msg);
@@ -458,7 +461,7 @@ void NS3Adapter::broadcastHandshakemsg(const std::string& msg_string)
     auto msg_vector = std::vector<uint8_t>(msg_string.begin(), msg_string.end());
     std::shared_ptr<std::vector<uint8_t>> message_content = std::make_shared<std::vector<uint8_t>>(std::move(msg_vector));
 
-    bool success = ns3_client_.registermsg(message_content);
+    bool success = ns3_client_.sendRegistrationMessage(message_content);
     ROS_ERROR_STREAM("ns3_address_: " << ns3_address_);
     ROS_ERROR_STREAM("ns3_registration_port_: " << ns3_registration_port_);
     ROS_ERROR_STREAM("ns3_v2x_listening_port_: " << ns3_v2x_listening_port_);

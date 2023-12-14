@@ -41,25 +41,20 @@ public:
     ~NS3Client();
 
     /**
-    * @brief connects and send handshake message to MOSAIC CARMA Ambassador
-    * @param message udp message
-    * @return true on sucessful connect, false otherwise
-    */
-    bool registermsg(const std::shared_ptr<std::vector<uint8_t>>&message);
-
-    /**
     * @brief Connects the driver to the OBU at the provided IPv4 address and Port
     * @param address IPv4 address of OBU
+    * @param remote_broadcasting_port of server's v2x service
+    * @param remote_registration_port of server's registration service
     * @param local_v2x_port of client v2x service
     * @param local_time_port of client time service
     * @param ec error code set during connect
     * @return true on sucessful connect, false otherwise
     */
-    bool connect(const std::string &remote_address,unsigned short remote_port,
+    bool connect_registration_and_broadcasting(const std::string &remote_address,unsigned short remote_broadcasting_port,unsigned short remote_registration_port,
                         unsigned short local_v2x_port, unsigned short local_time_port, boost::system::error_code &ec);
 
 
-    bool connect(const std::string &remote_address, unsigned short remote_port);
+    bool connect_registration(const std::string &remote_address, unsigned short remote_port);
 
     /**
     * @brief Closes connection
@@ -100,9 +95,14 @@ public:
     boost::signals2::signal<void(unsigned long)> onTimeReceived;
 
     /**
-     * @brief sends a udp message
+     * @brief sends a udp v2x message
      */
     bool sendNS3Message(const std::shared_ptr<std::vector<uint8_t>>&message);
+
+    /**
+     * @brief sends a udp registration message
+     */
+    bool sendRegistrationMessage(const std::shared_ptr<std::vector<uint8_t>>&message);
 
 
 private:
@@ -114,8 +114,12 @@ private:
     volatile bool running_;
 
     //udp
-    std::unique_ptr<boost::asio::ip::udp::socket> udp_out_socket_;
-    boost::asio::ip::udp::endpoint remote_udp_ep_;
+    std::unique_ptr<boost::asio::ip::udp::socket> udp_out_registration_socket_;
+    std::unique_ptr<boost::asio::ip::udp::socket> udp_out_broadcasting_socket_;
+    boost::asio::ip::udp::endpoint remote_udp_ep_registration_;
+    boost::asio::ip::udp::endpoint remote_udp_ep_broadcasting_;
+
+
     std::unique_ptr<cav::UDPListener> udp_v2x_listener_;
     std::unique_ptr<cav::UDPListener> udp_time_listener_;
 

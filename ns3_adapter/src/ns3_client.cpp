@@ -14,20 +14,15 @@ NS3Client::~NS3Client() {
     }catch(...){}
 }
 
-bool NS3Client::registermsg(const std::shared_ptr<std::vector<uint8_t>>&message)
-{
-    return sendNS3Message(message);
-}
 
-
-bool NS3Client::connect(const std::string &remote_address, unsigned short remote_port) {
+bool NS3Client::connect_registration(const std::string &remote_address, unsigned short remote_port) {
     boost::system::error_code ignored_ec;
      //If we are already connected return false
     if(running_) return false;
     //Get remote endpoint
     try
     {
-        remote_udp_ep_ = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(remote_address),remote_port);
+        remote_udp_ep_registration_ = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(remote_address),remote_port);
     }catch(std::exception e)
     {
         ignored_ec = boost::asio::error::invalid_argument;
@@ -38,7 +33,8 @@ bool NS3Client::connect(const std::string &remote_address, unsigned short remote
 
     io_.reset(new boost::asio::io_service());
     output_strand_.reset(new boost::asio::io_service::strand(*io_));
-    udp_out_socket_.reset(new boost::asio::ip::udp::socket(*io_,remote_udp_ep_.protocol()));
+    udp_out_registration_socket_.reset(new boost::asio::ip::udp::socket(*io_,remote_udp_ep_registration_.protocol()));
+    udp_out_broadcasting_socket_.reset(new boost::asio::ip::udp::socket(*io_,remote_udp_ep_broadcasting_.protocol()));
     work_.reset(new boost::asio::io_service::work(*io_));
 
     io_thread_.reset(new std::thread([this]()
@@ -56,8 +52,9 @@ bool NS3Client::connect(const std::string &remote_address, unsigned short remote
 }
 
 
-bool NS3Client::connect(const std::string &remote_address,
-                                unsigned short remote_port,
+bool NS3Client::connect_registration_and_broadcasting(const std::string &remote_address,
+                                unsigned short remote_broadcasting_port,
+                                unsigned short remote_registration_port,
                                  unsigned short local_v2x_port,
                                  unsigned short local_time_port,
                                  boost::system::error_code &ec)
@@ -67,7 +64,16 @@ bool NS3Client::connect(const std::string &remote_address,
     //Get remote endpoint
     try
     {
-        remote_udp_ep_ = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(remote_address),remote_port);
+        remote_udp_ep_broadcasting_ = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(remote_address),remote_broadcasting_port);
+    }catch(std::exception e)
+    {
+        ec = boost::asio::error::invalid_argument;
+        throw e;
+    }
+
+    try
+    {
+        remote_udp_ep_registration_ = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(remote_address),remote_registration_port);
     }catch(std::exception e)
     {
         ec = boost::asio::error::invalid_argument;
@@ -100,7 +106,9 @@ bool NS3Client::connect(const std::string &remote_address,
     };
 
     //connect signals
-    udp_v2x_listener_->onReceive.connect([this](const std::shared_ptr<const std::vector<uint8_t>>& data){process(data);});
+    udp_v2x_listener_->onReceive.connect([this](const std::shared_ptr<const std::vector<uint8_t>>& data){
+        ROS_ERROR_STREAM("NS3Client::connect on recevied v2x data");
+        process(data);});
 
     //TIME RECEIVER: build the udp listener, this class listens on address::port and sends packets through onReceive
     try
@@ -123,9 +131,12 @@ bool NS3Client::connect(const std::string &remote_address,
     };
 
     //connect signals
-    udp_time_listener_->onReceive.connect([this](const std::shared_ptr<const std::vector<uint8_t>>& data){process_time(data);});
+    udp_time_listener_->onReceive.connect([this](const std::shared_ptr<const std::vector<uint8_t>>& data){
+        ROS_ERROR_STREAM("NS3Client::connect on received time sync data");
+        process_time(data);});
 
-    udp_out_socket_.reset(new boost::asio::ip::udp::socket(*io_,remote_udp_ep_.protocol()));
+    udp_out_broadcasting_socket_.reset(new boost::asio::ip::udp::socket(*io_,remote_udp_ep_broadcasting_.protocol()));
+    udp_out_registration_socket_.reset(new boost::asio::ip::udp::socket(*io_,remote_udp_ep_registration_.protocol()));
     work_.reset(new boost::asio::io_service::work(*io_));
     // run the io service
     udp_v2x_listener_->start();
@@ -153,14 +164,20 @@ void NS3Client::close() {
     io_thread_->join();
     udp_v2x_listener_->stop();
     udp_time_listener_->stop();
-    udp_out_socket_.reset();
+    udp_out_broadcasting_socket_.reset();
+    udp_out_registration_socket_.reset();
     onDisconnect();
 }
 
 void NS3Client::process_time(const std::shared_ptr<const std::vector<uint8_t>>& data)
 {
+
     const std::vector<uint8_t> vec = *data;
+    ROS_ERROR_STREAM("process_time data received of size: " << vec.size());
+
     std::string json_string(vec.begin(), vec.end());
+    ROS_ERROR_STREAM("process_time data: " << json_string);
+
     // JSON
     rapidjson::Document obj;
     std::string timestep_member_name = "timestep";
@@ -176,6 +193,7 @@ void NS3Client::process_time(const std::shared_ptr<const std::vector<uint8_t>>& 
     {
         result = obj[timestep_member_name.c_str()].GetUint64();
     }
+    ROS_ERROR_STREAM("process_time deserialized unsigned long: " << std::to_string(result.value()));
 
     onTimeReceived(result.value());
 }
@@ -234,16 +252,41 @@ bool NS3Client::sendNS3Message(const std::shared_ptr<std::vector<uint8_t>>&messa
                              {
                                  try
                                  {
-                                     udp_out_socket_->send_to(boost::asio::buffer(*message), remote_udp_ep_);
+                                    udp_out_broadcasting_socket_->send_to(boost::asio::buffer(*message), remote_udp_ep_broadcasting_);
                                  }
                                  catch(boost::system::system_error error_code)
                                  {
-                                     onError(error_code.code());
+                                    onError(error_code.code());
                                  }
                                  catch(...)
                                  {
-                                     onError(boost::asio::error::fault);
+                                    onError(boost::asio::error::fault);
                                  }
+                             });
+        return true;
+    }
+    catch (std::exception& e) {
+        return false;
+    }
+}
+
+bool NS3Client::sendRegistrationMessage(const std::shared_ptr<std::vector<uint8_t>>&message) {
+    if(!running_) return false;
+    try {
+        output_strand_->post([this,message]()
+                             {
+                                try
+                                {
+                                udp_out_registration_socket_->send_to(boost::asio::buffer(*message), remote_udp_ep_registration_);
+                                }
+                                catch(boost::system::system_error error_code)
+                                {
+                                onError(error_code.code());
+                                }
+                                catch(...)
+                                {
+                                onError(boost::asio::error::fault);
+                                }
                              });
         return true;
     }
