@@ -67,7 +67,7 @@ void NS3Adapter::initialize() {
     api_.push_back(comms_pub_.getTopic());
 
     //Time publisher
-    time_pub_ = comms_api_nh_->advertise<rosgraph_msgs::Clock>("/clock", queue_size_);
+    time_pub_ = comms_api_nh_->advertise<rosgraph_msgs::Clock>("/sim_clock", queue_size_);
     api_.push_back(time_pub_.getTopic());
 
     //Comms Service
