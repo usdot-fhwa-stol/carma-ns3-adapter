@@ -1,6 +1,7 @@
 #include <iostream>
 #include <functional>
 #include "ns3_client.h"
+#include <ros/ros.h>
 
 NS3Client::NS3Client() :
     running_(false)
@@ -19,11 +20,41 @@ bool NS3Client::registermsg(const std::shared_ptr<std::vector<uint8_t>>&message)
 }
 
 
-bool NS3Client::connect(const std::string &remote_address, unsigned short remote_port,
-                            unsigned short local_v2x_port, unsigned short local_time_port) {
+bool NS3Client::connect(const std::string &remote_address, unsigned short remote_port) {
     boost::system::error_code ignored_ec;
-    return connect(remote_address, remote_port, local_v2x_port, local_time_port, ignored_ec);
+     //If we are already connected return false
+    if(running_) return false;
+    //Get remote endpoint
+    try
+    {
+        remote_udp_ep_ = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(remote_address),remote_port);
+    }catch(std::exception e)
+    {
+        ignored_ec = boost::asio::error::invalid_argument;
+        throw e;
+    }
+
+    ignored_ec.clear();
+
+    io_.reset(new boost::asio::io_service());
+    output_strand_.reset(new boost::asio::io_service::strand(*io_));
+    udp_out_socket_.reset(new boost::asio::ip::udp::socket(*io_,remote_udp_ep_.protocol()));
+    work_.reset(new boost::asio::io_service::work(*io_));
+
+    io_thread_.reset(new std::thread([this]()
+                                     {
+                                         boost::system::error_code err;
+                                         io_->run(err);
+                                         if(err)
+                                         {
+                                             onError(err);
+                                         }
+                                     }));
+    running_ = true;
+    onConnect();
+    return true;
 }
+
 
 bool NS3Client::connect(const std::string &remote_address,
                                 unsigned short remote_port,
@@ -59,12 +90,12 @@ bool NS3Client::connect(const std::string &remote_address,
     }catch(boost::system::system_error e)
     {
         ec = e.code();
-        std::cerr << "NS3Client::connect on v2x port threw system_error : " << e.what() <<std::endl;
+        ROS_ERROR_STREAM("NS3Client::connect on v2x port threw system_error : " << e.what());
         return false;
     }
     catch(std::exception e)
     {
-        std::cerr << "NS3Client::connect on v2x port threw exception : " << e.what() <<std::endl;
+        ROS_ERROR_STREAM("NS3Client::connect on v2x port threw exception : " << e.what());
         return false;
     };
 
@@ -82,12 +113,12 @@ bool NS3Client::connect(const std::string &remote_address,
     }catch(boost::system::system_error e)
     {
         ec = e.code();
-        std::cerr << "NS3Client::connect on time port threw system_error : " << e.what() <<std::endl;
+        ROS_ERROR_STREAM("NS3Client::connect on time port threw system_error : " << e.what());
         return false;
     }
     catch(std::exception e)
     {
-        std::cerr << "NS3Client::connect on time port threw exception : " << e.what() <<std::endl;
+        ROS_ERROR_STREAM("NS3Client::connect on time port threw exception : " << e.what());
         return false;
     };
 

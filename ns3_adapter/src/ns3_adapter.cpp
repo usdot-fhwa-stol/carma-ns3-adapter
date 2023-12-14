@@ -278,29 +278,27 @@ void NS3Adapter::pre_spin()
             {
                 std::lock_guard<std::mutex> lock(cfg_mutex_);
             }
-            ROS_INFO_STREAM("Attempting to connect to NS3");
+            ROS_ERROR_STREAM("Attempting to connect to NS3");
             boost::system::error_code ec;
            // ROS_INFO("Connecting to %s:%u", cfg.dsrc_address.c_str(), cfg.dsrc_listening_port);
-            ROS_INFO("Local port: %u", ns3_broadcasting_port_);
+            ROS_ERROR("Remote port: %u", ns3_broadcasting_port_);
             try {
                 if (!ns3_client_.connect(ns3_address_, ns3_broadcasting_port_,
                                           ns3_v2x_listening_port_, ns3_time_listening_port_, ec))
                 {
-                    ROS_WARN_STREAM("Failed to connect, err: " << ec.message());
+                    ROS_ERROR_STREAM("Failed to connect, err: " << ec.message());
                 }
             }catch(std::exception e)
             {
                 ROS_ERROR_STREAM("Exception connecting to CARMA Ambassador: " << e.what() << " error_code: " << ec.message());
             }
-
-
             connecting_ = false;
         }));
     }
 
-    ns3_client_.connect(ns3_address_, ns3_registration_port_, ns3_v2x_listening_port_, ns3_time_listening_port_);
+    ns3_client_.connect(ns3_address_, ns3_registration_port_);
     std::string handshake_msg = compose_handshake_msg(vehicle_id_, role_id_, std::to_string(ns3_v2x_listening_port_), std::to_string(ns3_time_listening_port_), host_ip_);
-    ROS_WARN_STREAM("handshake_msg: " << handshake_msg);
+    ROS_ERROR_STREAM("handshake_msg: " << handshake_msg);
     broadcastHandshakemsg(handshake_msg);
 }
 
@@ -456,21 +454,21 @@ std::string NS3Adapter::compose_handshake_msg(std::string veh_id, std::string ro
 
 void NS3Adapter::broadcastHandshakemsg(const std::string& msg_string)
 {
-    ROS_WARN_STREAM("in broadcastHandshakemsg");
+    ROS_ERROR_STREAM("in broadcastHandshakemsg");
     auto msg_vector = std::vector<uint8_t>(msg_string.begin(), msg_string.end());
     std::shared_ptr<std::vector<uint8_t>> message_content = std::make_shared<std::vector<uint8_t>>(std::move(msg_vector));
 
     bool success = ns3_client_.registermsg(message_content);
-    ROS_WARN_STREAM("ns3_address_: " << ns3_address_);
-    ROS_WARN_STREAM("ns3_registration_port_: " << ns3_registration_port_);
-    ROS_WARN_STREAM("ns3_v2x_listening_port_: " << ns3_v2x_listening_port_);
-    ROS_WARN_STREAM("ns3_time_listening_port_: " << ns3_time_listening_port_);
-    ROS_WARN_STREAM("Handshake Message success: " << success);
+    ROS_ERROR_STREAM("ns3_address_: " << ns3_address_);
+    ROS_ERROR_STREAM("ns3_registration_port_: " << ns3_registration_port_);
+    ROS_ERROR_STREAM("ns3_v2x_listening_port_: " << ns3_v2x_listening_port_);
+    ROS_ERROR_STREAM("ns3_time_listening_port_: " << ns3_time_listening_port_);
+    ROS_ERROR_STREAM("Handshake Message success: " << success);
     if (!success) {
-        ROS_WARN_STREAM("Handshake Message send failed");
+        ROS_ERROR_STREAM("Handshake Message send failed");
     }
     else {
-        ROS_WARN_STREAM("Handshake Message successfully");
+        ROS_ERROR_STREAM("Handshake Message successfully");
     }
 }
 

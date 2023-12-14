@@ -59,7 +59,7 @@ public:
                         unsigned short local_v2x_port, unsigned short local_time_port, boost::system::error_code &ec);
 
 
-    bool connect(const std::string &remote_address, unsigned short remote_port, unsigned short local_v2x_port, unsigned short local_time_port);
+    bool connect(const std::string &remote_address, unsigned short remote_port);
 
     /**
     * @brief Closes connection
