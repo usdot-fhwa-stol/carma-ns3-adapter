@@ -99,7 +99,7 @@ void NS3Adapter::onDisconnectHandler() {
 void NS3Adapter::onTimeReceivedHandler(unsigned long timestamp)
 {
     rosgraph_msgs::Clock time_now;
-    ROS_ERROR_STREAM("Received timestamp! " << std::to_string(timestamp));
+    ROS_DEBUG_STREAM("Received timestamp! " << std::to_string(timestamp));
     time_now.clock.sec = static_cast<int>(timestamp / 1e9);
     time_now.clock.nsec = timestamp - time_now.clock.sec * 1e9;
 
@@ -457,21 +457,21 @@ std::string NS3Adapter::compose_handshake_msg(std::string veh_id, std::string ro
 
 void NS3Adapter::broadcastHandshakemsg(const std::string& msg_string)
 {
-    ROS_ERROR_STREAM("in broadcastHandshakemsg");
+    ROS_DEBUG_STREAM("in broadcastHandshakemsg");
     auto msg_vector = std::vector<uint8_t>(msg_string.begin(), msg_string.end());
     std::shared_ptr<std::vector<uint8_t>> message_content = std::make_shared<std::vector<uint8_t>>(std::move(msg_vector));
 
     bool success = ns3_client_.sendRegistrationMessage(message_content);
-    ROS_ERROR_STREAM("ns3_address_: " << ns3_address_);
-    ROS_ERROR_STREAM("ns3_registration_port_: " << ns3_registration_port_);
-    ROS_ERROR_STREAM("ns3_v2x_listening_port_: " << ns3_v2x_listening_port_);
-    ROS_ERROR_STREAM("ns3_time_listening_port_: " << ns3_time_listening_port_);
-    ROS_ERROR_STREAM("Handshake Message success: " << success);
+    ROS_DEBUG_STREAM("ns3_address_: " << ns3_address_);
+    ROS_DEBUG_STREAM("ns3_registration_port_: " << ns3_registration_port_);
+    ROS_DEBUG_STREAM("ns3_v2x_listening_port_: " << ns3_v2x_listening_port_);
+    ROS_DEBUG_STREAM("ns3_time_listening_port_: " << ns3_time_listening_port_);
+    ROS_DEBUG_STREAM("Handshake Message success: " << success);
     if (!success) {
-        ROS_ERROR_STREAM("Handshake Message send failed");
+        ROS_WARN_STREAM("Handshake Message send failed");
     }
     else {
-        ROS_ERROR_STREAM("Handshake Message successfully");
+        ROS_DEBUG_STREAM("Handshake Message successfully");
     }
 }
 
