@@ -260,7 +260,7 @@ void NS3Adapter::pre_spin()
     // Adjust output queue size if config changed.
     if(ns3_client_error_)
     {
-        ROS_ERROR_STREAM("NS-3 Client Error : " << ns3_client_error_.message());
+        ROS_WARN_STREAM("NS-3 Client Error : " << ns3_client_error_.message());
         ns3_client_.close();
         ns3_client_error_.clear();
     }
@@ -279,17 +279,17 @@ void NS3Adapter::pre_spin()
             {
                 std::lock_guard<std::mutex> lock(cfg_mutex_);
             }
-            ROS_ERROR_STREAM("Attempting to connect to NS3");
+            ROS_DEBUG("Attempting to connect to NS3");
             boost::system::error_code ec;
            // ROS_INFO("Connecting to %s:%u", cfg.dsrc_address.c_str(), cfg.dsrc_listening_port);
-            ROS_ERROR("Remote broadcasting port: %u", ns3_broadcasting_port_);
-            ROS_ERROR("Remote registration port: %u", ns3_registration_port_);
+            ROS_DEBUG("Remote broadcasting port: %u", ns3_broadcasting_port_);
+            ROS_DEBUG("Remote registration port: %u", ns3_registration_port_);
 
             try {
                 if (!ns3_client_.connect_registration_and_broadcasting(ns3_address_, ns3_broadcasting_port_, ns3_registration_port_,
                                           ns3_v2x_listening_port_, ns3_time_listening_port_, ec))
                 {
-                    ROS_ERROR_STREAM("Failed to connect, err: " << ec.message());
+                    ROS_WARN_STREAM("Failed to connect, err: " << ec.message());
                 }
             }catch(std::exception e)
             {
@@ -301,7 +301,7 @@ void NS3Adapter::pre_spin()
 
     //ns3_client_.connect_registration(ns3_address_, ns3_registration_port_);
     std::string handshake_msg = compose_handshake_msg(vehicle_id_, role_id_, std::to_string(ns3_v2x_listening_port_), std::to_string(ns3_time_listening_port_), host_ip_);
-    ROS_ERROR_STREAM("handshake_msg: " << handshake_msg);
+    ROS_DEBUG_STREAM("handshake_msg: " << handshake_msg);
     broadcastHandshakemsg(handshake_msg);
 }
 
@@ -351,7 +351,7 @@ void NS3Adapter::loadWaveConfig(const std::string &fileName)
     try
     {
         file.open(fileName);
-        ROS_ERROR_STREAM("fileName : " << fileName);
+        ROS_INFO_STREAM("fileName : " << fileName);
     }
     catch (std::exception& e)
     {

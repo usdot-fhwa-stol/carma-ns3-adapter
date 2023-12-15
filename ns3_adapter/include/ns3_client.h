@@ -134,6 +134,11 @@ private:
     */
     void process(const std::shared_ptr<const std::vector<uint8_t>> &data);
 
-    // TODO
+    /**
+    * @brief maintains the process_time thread
+    *
+    * This will parse the UDP packet to get json document about the current simulation time
+    * coming from mosaic
+    */
     void process_time(const std::shared_ptr<const std::vector<uint8_t>> &data);
 };

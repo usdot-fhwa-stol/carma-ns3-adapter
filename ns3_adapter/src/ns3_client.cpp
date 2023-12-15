@@ -107,7 +107,7 @@ bool NS3Client::connect_registration_and_broadcasting(const std::string &remote_
 
     //connect signals
     udp_v2x_listener_->onReceive.connect([this](const std::shared_ptr<const std::vector<uint8_t>>& data){
-        ROS_ERROR_STREAM("NS3Client::connect on recevied v2x data");
+        ROS_DEBUG_STREAM("NS3Client::connect on received v2x data");
         process(data);});
 
     //TIME RECEIVER: build the udp listener, this class listens on address::port and sends packets through onReceive
@@ -132,7 +132,7 @@ bool NS3Client::connect_registration_and_broadcasting(const std::string &remote_
 
     //connect signals
     udp_time_listener_->onReceive.connect([this](const std::shared_ptr<const std::vector<uint8_t>>& data){
-        ROS_ERROR_STREAM("NS3Client::connect on received time sync data");
+        ROS_DEBUG_STREAM("NS3Client::connect on received time sync data");
         process_time(data);});
 
     udp_out_broadcasting_socket_.reset(new boost::asio::ip::udp::socket(*io_,remote_udp_ep_broadcasting_.protocol()));
@@ -171,12 +171,11 @@ void NS3Client::close() {
 
 void NS3Client::process_time(const std::shared_ptr<const std::vector<uint8_t>>& data)
 {
-
     const std::vector<uint8_t> vec = *data;
-    ROS_ERROR_STREAM("process_time data received of size: " << vec.size());
+    ROS_DEBUG_STREAM("process_time data received of size: " << vec.size());
 
     std::string json_string(vec.begin(), vec.end());
-    ROS_ERROR_STREAM("process_time data: " << json_string);
+    ROS_DEBUG_STREAM("process_time data: " << json_string);
 
     // JSON
     rapidjson::Document obj;
@@ -184,8 +183,7 @@ void NS3Client::process_time(const std::shared_ptr<const std::vector<uint8_t>>& 
     obj.Parse(json_string);
     if (obj.HasParseError())
     {
-        // TODO: Change to json_document_parse_exception. Requires changes to services and unit tests
-        throw std::runtime_error("Message JSON is misformatted. JSON parsing failed!");
+        throw std::runtime_error(std::striong("Message JSON is misformatted. JSON parsing failed! Please check process_time data: " + json_string));
     }
 
     std::optional<unsigned long> result;
@@ -193,7 +191,7 @@ void NS3Client::process_time(const std::shared_ptr<const std::vector<uint8_t>>& 
     {
         result = obj[timestep_member_name.c_str()].GetUint64();
     }
-    ROS_ERROR_STREAM("process_time deserialized unsigned long: " << std::to_string(result.value()));
+    ROS_DEBUG_STREAM("process_time deserialized unsigned long: " << std::to_string(result.value()));
 
     onTimeReceived(result.value());
 }

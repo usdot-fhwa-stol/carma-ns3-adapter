@@ -176,7 +176,11 @@ class NS3Adapter : public cav::DriverApplication
         */
         void onMessageReceivedHandler(const std::vector<uint8_t> &data, uint16_t id);
 
-        // TODO
+        /**
+        * @brief Handles TimeSync messages received from the NS-3 Ambassador
+        *
+        * publishes to the ROS '/sim_clock' topic to broadcast current simulation time in MOSAIC
+        */
         void onTimeReceivedHandler(unsigned long);
 
         /**
