@@ -183,7 +183,7 @@ void NS3Client::process_time(const std::shared_ptr<const std::vector<uint8_t>>& 
     obj.Parse(json_string);
     if (obj.HasParseError())
     {
-        throw std::runtime_error(std::striong("Message JSON is misformatted. JSON parsing failed! Please check process_time data: " + json_string));
+        throw std::runtime_error(std::string("Message JSON is misformatted. JSON parsing failed! Please check process_time data: " + json_string));
     }
 
     std::optional<unsigned long> result;
