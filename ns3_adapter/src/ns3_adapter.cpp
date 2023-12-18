@@ -436,11 +436,11 @@ std::string NS3Adapter::compose_handshake_msg(const std::string& veh_id, const s
     document.AddMember("rxMessageIpAddress", iptextPart, allocator);
 
     rapidjson::Value porttextPart;
-	porttextPart.SetInt(message_port, allocator);
+	porttextPart.SetInt(message_port);
     document.AddMember("rxMessagePort", porttextPart, allocator);
 
     rapidjson::Value portTimePart;
-	portTimePart.SetInt(time_port, allocator);
+	portTimePart.SetInt(time_port);
     document.AddMember("rxTimeSyncPort", portTimePart, allocator);
 
     rapidjson::StringBuffer strbuf;
