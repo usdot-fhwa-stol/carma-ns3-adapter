@@ -235,7 +235,7 @@ class NS3Adapter : public cav::DriverApplication
         * @param fileName
         * @return the json string for the msg
         */
-        std::string compose_handshake_msg(const std::string& veh_id, const std::string& role_id, const std::string& message_port, const std::string& time_port, const std::string& ip);
+        std::string compose_handshake_msg(const std::string& veh_id, const std::string& role_id, int message_port, int time_port, const std::string& ip);
 
         void broadcastHandshakemsg(const std::string& msg_string);
 

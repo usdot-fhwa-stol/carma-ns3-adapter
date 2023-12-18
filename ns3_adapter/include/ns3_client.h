@@ -26,7 +26,6 @@
 #include <vector>
 #include <rapidjson/document.h>
 #include <rapidjson/rapidjson.h>
-#include <optional>
 
 #include "udp_listener.h"
 

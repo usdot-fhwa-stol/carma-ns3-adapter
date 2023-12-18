@@ -298,7 +298,7 @@ void NS3Adapter::pre_spin()
         }));
     }
 
-    std::string handshake_msg = compose_handshake_msg(vehicle_id_, role_id_, std::to_string(ns3_v2x_listening_port_), std::to_string(ns3_time_listening_port_), host_ip_);
+    std::string handshake_msg = compose_handshake_msg(vehicle_id_, role_id_, ns3_v2x_listening_port_, ns3_time_listening_port_, host_ip_);
     broadcastHandshakemsg(handshake_msg);
 }
 
@@ -409,7 +409,7 @@ void NS3Adapter::pose_cb(geometry_msgs::PoseStamped pose_msg)
     /*TODO: Add Pose Functionality*/
 }
 
-std::string NS3Adapter::compose_handshake_msg(const std::string& veh_id, const std::string& role_id, const std::string& message_port, const std::string& time_port, const std::string& ip)
+std::string NS3Adapter::compose_handshake_msg(const std::string& veh_id, const std::string& role_id, int message_port, int time_port, const std::string& ip)
 {
     // document is the root of a json message
 	rapidjson::Document document;
@@ -436,11 +436,11 @@ std::string NS3Adapter::compose_handshake_msg(const std::string& veh_id, const s
     document.AddMember("rxMessageIpAddress", iptextPart, allocator);
 
     rapidjson::Value porttextPart;
-	porttextPart.SetString(message_port.c_str(), allocator);
+	porttextPart.SetInt(message_port, allocator);
     document.AddMember("rxMessagePort", porttextPart, allocator);
 
     rapidjson::Value portTimePart;
-	portTimePart.SetString(time_port.c_str(), allocator);
+	portTimePart.SetInt(time_port, allocator);
     document.AddMember("rxTimeSyncPort", portTimePart, allocator);
 
     rapidjson::StringBuffer strbuf;

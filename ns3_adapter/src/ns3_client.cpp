@@ -145,22 +145,20 @@ void NS3Client::process_time(const std::shared_ptr<const std::vector<uint8_t>>& 
         throw std::runtime_error("Message JSON is misformatted. JSON parsing failed! Please check process_time data: " + json_string);
     }
 
-    std::optional<unsigned long> result = std::nullopt;
+    unsigned long timestep_received;
     if (obj.HasMember(timestep_member_name.c_str()) && obj.FindMember(timestep_member_name.c_str())->value.IsUint64())
     {
-        result = obj[timestep_member_name.c_str()].GetUint64();
+        timestep_received = obj[timestep_member_name.c_str()].GetUint64();
     }
-
-    if (!result)
+    else
     {
-        ROS_WARN_STREAM("process_time expected unsigned Int nanoseconds as JSON on its time sync udp listener, but was not able to extract member: "
-            << timestep_member_name << ". Check if the data is malformed, returning...");
-        return;
+        throw std::runtime_error("process_time expected unsigned Int nanoseconds as JSON on its time sync udp listener, but was not able to extract member: "
+            + timestep_member_name + ". Check if the data is malformed");
     }
 
-    ROS_DEBUG_STREAM("process_time successfully deserialized unsigned long: " << std::to_string(result.value()));
+    ROS_DEBUG_STREAM("process_time successfully deserialized unsigned long: " << std::to_string(timestep_received));
 
-    onTimeReceived(result.value());
+    onTimeReceived(timestep_received);
 }
 
 void NS3Client::process(const std::shared_ptr<const std::vector<uint8_t>>& data)

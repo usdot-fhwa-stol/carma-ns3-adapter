@@ -115,6 +115,6 @@ TEST(NS3AdapterTest, testcompose_handshake_msg)
     char c[2][2] = {{'a','b'}, {'c','d'}};
     char* argv[] {c[0], c[1]};
     NS3Adapter worker(argc,argv);
-    std::string result = worker.compose_handshake_msg("default_id", "ego1", "2000", "2001", "127.0.0.1");
-    std::cout << result << std::endl;
+    std::string result = worker.compose_handshake_msg("default_id", "ego1", 2000, 2001, "127.0.0.1");
+    EXPECT_EQ(result, "")
 }
