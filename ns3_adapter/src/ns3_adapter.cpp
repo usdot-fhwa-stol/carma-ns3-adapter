@@ -260,7 +260,7 @@ void NS3Adapter::pre_spin()
     // Adjust output queue size if config changed.
     if(ns3_client_error_)
     {
-        ROS_WARN_STREAM("NS-3 Client Error : " << ns3_client_error_.message());
+        ROS_WARN_STREAM("NS-3 Client Error detected: " << ns3_client_error_.message() << ", resetting the client before attempting to connect again...");
         ns3_client_.close();
         ns3_client_error_.clear();
     }
@@ -281,7 +281,6 @@ void NS3Adapter::pre_spin()
             }
             ROS_DEBUG("Attempting to connect to NS3");
             boost::system::error_code ec;
-           // ROS_INFO("Connecting to %s:%u", cfg.dsrc_address.c_str(), cfg.dsrc_listening_port);
             ROS_DEBUG("Remote broadcasting port: %u", ns3_broadcasting_port_);
             ROS_DEBUG("Remote registration port: %u", ns3_registration_port_);
 
@@ -291,7 +290,7 @@ void NS3Adapter::pre_spin()
                 {
                     ROS_WARN_STREAM("Failed to connect, err: " << ec.message());
                 }
-            }catch(std::exception e)
+            } catch (const std::exception &e)
             {
                 ROS_ERROR_STREAM("Exception connecting to CARMA Ambassador: " << e.what() << " error_code: " << ec.message());
             }
@@ -299,9 +298,7 @@ void NS3Adapter::pre_spin()
         }));
     }
 
-    //ns3_client_.connect_registration(ns3_address_, ns3_registration_port_);
     std::string handshake_msg = compose_handshake_msg(vehicle_id_, role_id_, std::to_string(ns3_v2x_listening_port_), std::to_string(ns3_time_listening_port_), host_ip_);
-    ROS_DEBUG_STREAM("handshake_msg: " << handshake_msg);
     broadcastHandshakemsg(handshake_msg);
 }
 
@@ -353,7 +350,7 @@ void NS3Adapter::loadWaveConfig(const std::string &fileName)
         file.open(fileName);
         ROS_INFO_STREAM("fileName : " << fileName);
     }
-    catch (std::exception& e)
+    catch (const std::exception& e)
     {
         ROS_ERROR_STREAM("Unable to open file : " << fileName << ", exception: " << e.what());
         return;
@@ -412,7 +409,7 @@ void NS3Adapter::pose_cb(geometry_msgs::PoseStamped pose_msg)
     /*TODO: Add Pose Functionality*/
 }
 
-std::string NS3Adapter::compose_handshake_msg(std::string veh_id, std::string role_id, std::string message_port, std::string time_port, std::string ip)
+std::string NS3Adapter::compose_handshake_msg(const std::string& veh_id, const std::string& role_id, const std::string& message_port, const std::string& time_port, const std::string& ip)
 {
     // document is the root of a json message
 	rapidjson::Document document;
@@ -457,7 +454,7 @@ std::string NS3Adapter::compose_handshake_msg(std::string veh_id, std::string ro
 
 void NS3Adapter::broadcastHandshakemsg(const std::string& msg_string)
 {
-    ROS_DEBUG_STREAM("in broadcastHandshakemsg");
+    ROS_DEBUG_STREAM("Attempting to broadcastHandshakemsg: " << msg_string);
     auto msg_vector = std::vector<uint8_t>(msg_string.begin(), msg_string.end());
     std::shared_ptr<std::vector<uint8_t>> message_content = std::make_shared<std::vector<uint8_t>>(std::move(msg_vector));
 
@@ -466,7 +463,7 @@ void NS3Adapter::broadcastHandshakemsg(const std::string& msg_string)
     ROS_DEBUG_STREAM("ns3_registration_port_: " << ns3_registration_port_);
     ROS_DEBUG_STREAM("ns3_v2x_listening_port_: " << ns3_v2x_listening_port_);
     ROS_DEBUG_STREAM("ns3_time_listening_port_: " << ns3_time_listening_port_);
-    ROS_DEBUG_STREAM("Handshake Message success: " << success);
+
     if (!success) {
         ROS_WARN_STREAM("Handshake Message send failed");
     }
