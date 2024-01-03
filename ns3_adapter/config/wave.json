@@ -28,6 +28,13 @@
     "priority" : "3"
   },
   {
+    "name" : "SDSM",
+    "psid" : "0082",
+    "dsrc_id" : "41",
+    "channel" : "172",
+    "priority" : "3"
+  },
+  {
     "name" : "MobilityRequest",
     "psid" : "BFEE",
     "dsrc_id" : "240",
