@@ -28,7 +28,7 @@
     "priority" : "3"
   },
   {
-    "name" : "SDSM",
+    "name" : "SensorDataSharingMessage",
     "psid" : "0082",
     "dsrc_id" : "41",
     "channel" : "172",
