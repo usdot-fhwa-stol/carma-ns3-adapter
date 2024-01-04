@@ -29,7 +29,7 @@
   },
   {
     "name" : "SensorDataSharingMessage",
-    "psid" : "0082",
+    "psid" : "0090",
     "dsrc_id" : "41",
     "channel" : "172",
     "priority" : "3"
