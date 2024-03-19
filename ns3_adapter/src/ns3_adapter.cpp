@@ -7,6 +7,7 @@
 #include <rapidjson/writer.h>
 #include <cav_msgs/ByteArray.h>
 #include <fstream>
+#include <chrono>
 
 std::string NS3Adapter::uint8_vector_to_hex_string(const std::vector<uint8_t>& v) {
     std::stringstream ss;
@@ -99,7 +100,12 @@ void NS3Adapter::onDisconnectHandler() {
 void NS3Adapter::onTimeReceivedHandler(unsigned long timestamp)
 {
     rosgraph_msgs::Clock time_now;
-    ROS_DEBUG_STREAM("Received timestamp! " << std::to_string(timestamp));
+    auto chrono_time = std::chrono::system_clock::now();
+    auto epoch = chrono_time.time_since_epoch();
+    auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(epoch);
+    auto time_to_milli = static_cast<int>(timestamp / 1e6);
+    ROS_WARN_STREAM("Simulation Time: " << std::to_string(time_to_milli) << " where current system time is: "
+        << std::to_string(milliseconds.count()));
     time_now.clock.sec = static_cast<int>(timestamp / 1e9);
     time_now.clock.nsec = timestamp - time_now.clock.sec * 1e9;
 
