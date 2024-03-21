@@ -107,7 +107,7 @@ void NS3Adapter::onTimeReceivedHandler(unsigned long timestamp)
     auto epoch = chrono_time.time_since_epoch();
     auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(epoch);
     auto time_to_milli = static_cast<int>(timestamp / 1e6);
-    ROS_WARN_STREAM("Simulation Time: " << std::to_string(time_to_milli) << " where current system time is: "
+    ROS_DEBUG_STREAM("Simulation Time: " << std::to_string(time_to_milli) << " where current system time is: "
         << std::to_string(milliseconds.count()));
     time_now.clock.sec = static_cast<int>(timestamp / 1e9);
     time_now.clock.nsec = timestamp - time_now.clock.sec * 1e9;
