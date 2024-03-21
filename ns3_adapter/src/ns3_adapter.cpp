@@ -100,11 +100,14 @@ void NS3Adapter::onDisconnectHandler() {
 void NS3Adapter::onTimeReceivedHandler(unsigned long timestamp)
 {
     rosgraph_msgs::Clock time_now;
+    // A script to validate time synchronization of tools in CDASim currently relies on the following
+    // log line. TODO: This line is meant to be removed in the future upon completion of this work:
+    // https://github.com/usdot-fhwa-stol/carma-analytics-fotda/pull/43
     auto chrono_time = std::chrono::system_clock::now();
     auto epoch = chrono_time.time_since_epoch();
     auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(epoch);
     auto time_to_milli = static_cast<int>(timestamp / 1e6);
-    ROS_WARN_STREAM("Simulation Time: " << std::to_string(time_to_milli) << " where current system time is: "
+    ROS_INFO_STREAM("Simulation Time: " << std::to_string(time_to_milli) << " where current system time is: "
         << std::to_string(milliseconds.count()));
     time_now.clock.sec = static_cast<int>(timestamp / 1e9);
     time_now.clock.nsec = timestamp - time_now.clock.sec * 1e9;
