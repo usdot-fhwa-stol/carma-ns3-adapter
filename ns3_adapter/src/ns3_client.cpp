@@ -1,6 +1,7 @@
 #include <iostream>
 #include <functional>
 #include "ns3_client.h"
+#include <ros/ros.h>
 
 NS3Client::NS3Client() :
     running_(false)
@@ -13,40 +14,11 @@ NS3Client::~NS3Client() {
     }catch(...){}
 }
 
-bool NS3Client::registermsg(const std::shared_ptr<std::vector<uint8_t>>&message, const std::string &remote_address, unsigned short remote_port,
-                            unsigned short local_port)
-{
-    bool success = false;
-    
-    if (connect(remote_address, remote_port, local_port))
-    {
-        bool send_success = sendNS3Message(message);
-        if (send_success)
-        { 
-            // ROS_DEBUG_STREAM("Handshake Message sent successfully");
-            success = true;
-        }
-        // else ROS_DEBUG_STREAM("Handshake Message send failed");
-    }
-    // else ROS_DEBUG_STREAM( "Connection failed" );
-    else std::cerr << "Connection failed" << std::endl;
-
-
-    // close();
-    
-    return success;
-}
-
-
-bool NS3Client::connect(const std::string &remote_address, unsigned short remote_port,
-                            unsigned short local_port) {
-    boost::system::error_code ignored_ec;
-    return connect(remote_address, remote_port, local_port, ignored_ec);
-}
-
-bool NS3Client::connect(const std::string &remote_address,
-                                unsigned short remote_port,
-                                 unsigned short local_port,
+bool NS3Client::connect_registration_and_broadcasting(const std::string &remote_address,
+                                unsigned short remote_v2x_broadcasting_port,
+                                unsigned short remote_registration_port,
+                                 unsigned short local_v2x_port,
+                                 unsigned short local_time_port,
                                  boost::system::error_code &ec)
 {
     //If we are already connected return false
@@ -54,45 +26,81 @@ bool NS3Client::connect(const std::string &remote_address,
     //Get remote endpoint
     try
     {
-        remote_udp_ep_ = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(remote_address),remote_port);
-    }catch(std::exception e)
+        remote_udp_ep_v2x_msg_broadcasting_ = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(remote_address, ec),remote_v2x_broadcasting_port);
+    } catch (const std::exception &e)
     {
-        ec = boost::asio::error::invalid_argument;
-        throw e;
+        ROS_ERROR_STREAM("There was an exception creating udp endpoint at remote_v2x_broadcasting_port: " << remote_v2x_broadcasting_port << ", with error: " << e.what());
+        return false;
     }
 
-    ec.clear(); 
+    try
+    {
+        remote_udp_ep_registration_ = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(remote_address, ec),remote_registration_port);
+    }catch (const std::exception &e)
+    {
+        ROS_ERROR_STREAM("There was an exception creating udp endpoint at remote_registration_port: " << remote_registration_port << ", with error: " << e.what());
+        return false;
+    }
+
+    ec.clear();
 
     io_.reset(new boost::asio::io_service());
     output_strand_.reset(new boost::asio::io_service::strand(*io_));
 
-    //build the udp listener, this class listens on address::port and sends packets through onReceive
+    //V2X RECEIVER: build the udp listener, this class listens on address::port and sends packets through onReceive
     try
     {
-        if(udp_listener_){
-            udp_listener_.reset(nullptr);
-            
+        if(udp_v2x_listener_){
+            udp_v2x_listener_.reset(nullptr);
+
         }
-        udp_listener_.reset(new cav::UDPListener(*io_,local_port));
-    }catch(boost::system::system_error e)
+        udp_v2x_listener_.reset(new cav::UDPListener(*io_,local_v2x_port));
+    } catch(const boost::system::system_error& e)
     {
-        ec = e.code();
-        std::cerr << "NS3Client::connect threw system_error : " << e.what() <<std::endl;
+        ROS_ERROR_STREAM("NS3Client::connect on v2x port threw system_error : " << e.what());
         return false;
-    }
-    catch(std::exception e)
+    } catch (const std::exception &e)
     {
-        std::cerr << "NS3Client::connect threw exception : " << e.what() <<std::endl;
+        ROS_ERROR_STREAM("NS3Client::connect on v2x port threw exception : " << e.what());
         return false;
     };
 
     //connect signals
-    udp_listener_->onReceive.connect([this](const std::shared_ptr<const std::vector<uint8_t>>& data){process(data);});
+    udp_v2x_listener_->onReceive.connect([this](const std::shared_ptr<const std::vector<uint8_t>>& data){
+        ROS_DEBUG_STREAM("NS3Client::connect on received v2x data");
+        process(data);});
 
-    udp_out_socket_.reset(new boost::asio::ip::udp::socket(*io_,remote_udp_ep_.protocol()));
+    //TIME RECEIVER: build the udp listener, this class listens on address::port and sends packets through onReceive
+    try
+    {
+        if(udp_time_listener_){
+            udp_time_listener_.reset(nullptr);
+
+        }
+        udp_time_listener_.reset(new cav::UDPListener(*io_,local_time_port));
+    }catch(const boost::system::system_error& e)
+    {
+        ROS_ERROR_STREAM("NS3Client::connect on time port threw system_error : " << e.what());
+        return false;
+    }
+    catch (const std::exception &e)
+    {
+        ROS_ERROR_STREAM("NS3Client::connect on time port threw exception : " << e.what());
+        return false;
+    };
+
+    //connect signals
+    udp_time_listener_->onReceive.connect([this](const std::shared_ptr<const std::vector<uint8_t>>& data){
+        ROS_DEBUG_STREAM("NS3Client::connect on received time sync data");
+        process_time(data);});
+
+    udp_out_v2x_msg_broadcasting_socket_.reset(new boost::asio::ip::udp::socket(*io_,remote_udp_ep_v2x_msg_broadcasting_.protocol()));
+    udp_out_registration_socket_.reset(new boost::asio::ip::udp::socket(*io_,remote_udp_ep_registration_.protocol()));
     work_.reset(new boost::asio::io_service::work(*io_));
     // run the io service
-    udp_listener_->start();
+    udp_v2x_listener_->start();
+    udp_time_listener_->start();
+
     io_thread_.reset(new std::thread([this]()
                                      {
                                          boost::system::error_code err;
@@ -113,9 +121,44 @@ void NS3Client::close() {
     work_.reset();
     io_->stop();
     io_thread_->join();
-    udp_listener_->stop();
-    udp_out_socket_.reset();
+    udp_v2x_listener_->stop();
+    udp_time_listener_->stop();
+    udp_out_v2x_msg_broadcasting_socket_.reset();
+    udp_out_registration_socket_.reset();
     onDisconnect();
+}
+
+void NS3Client::process_time(const std::shared_ptr<const std::vector<uint8_t>>& data)
+{
+    const std::vector<uint8_t> vec = *data;
+    ROS_DEBUG_STREAM("process_time data received of size: " << vec.size());
+
+    std::string json_string(vec.begin(), vec.end());
+    ROS_DEBUG_STREAM("process_time data: " << json_string);
+
+    // JSON
+    rapidjson::Document obj;
+    std::string timestep_member_name = "timestep";
+    obj.Parse(json_string);
+    if (obj.HasParseError())
+    {
+        throw std::runtime_error("Message JSON is misformatted. JSON parsing failed! Please check process_time data: " + json_string);
+    }
+
+    unsigned long timestep_received;
+    if (obj.HasMember(timestep_member_name.c_str()) && obj.FindMember(timestep_member_name.c_str())->value.IsUint64())
+    {
+        timestep_received = obj[timestep_member_name.c_str()].GetUint64();
+    }
+    else
+    {
+        throw std::runtime_error("process_time expected unsigned Int nanoseconds as JSON on its time sync udp listener, but was not able to extract member: "
+            + timestep_member_name + ". Check if the data is malformed");
+    }
+
+    ROS_DEBUG_STREAM("process_time successfully deserialized unsigned long: " << std::to_string(timestep_received));
+
+    onTimeReceived(timestep_received);
 }
 
 void NS3Client::process(const std::shared_ptr<const std::vector<uint8_t>>& data)
@@ -172,20 +215,45 @@ bool NS3Client::sendNS3Message(const std::shared_ptr<std::vector<uint8_t>>&messa
                              {
                                  try
                                  {
-                                     udp_out_socket_->send_to(boost::asio::buffer(*message), remote_udp_ep_);
+                                    udp_out_v2x_msg_broadcasting_socket_->send_to(boost::asio::buffer(*message), remote_udp_ep_v2x_msg_broadcasting_);
                                  }
-                                 catch(boost::system::system_error error_code)
+                                 catch(const boost::system::system_error& error_code)
                                  {
-                                     onError(error_code.code());
+                                    onError(error_code.code());
                                  }
                                  catch(...)
                                  {
-                                     onError(boost::asio::error::fault);
+                                    onError(boost::asio::error::fault);
                                  }
                              });
         return true;
     }
-    catch (std::exception& e) {
+    catch (const std::exception& e) {
+        return false;
+    }
+}
+
+bool NS3Client::sendRegistrationMessage(const std::shared_ptr<std::vector<uint8_t>>&message) {
+    if(!running_) return false;
+    try {
+        output_strand_->post([this,message]()
+                             {
+                                try
+                                {
+                                udp_out_registration_socket_->send_to(boost::asio::buffer(*message), remote_udp_ep_registration_);
+                                }
+                                catch(const boost::system::system_error& error_code)
+                                {
+                                onError(error_code.code());
+                                }
+                                catch(...)
+                                {
+                                onError(boost::asio::error::fault);
+                                }
+                             });
+        return true;
+    }
+    catch (const std::exception& e) {
         return false;
     }
 }
