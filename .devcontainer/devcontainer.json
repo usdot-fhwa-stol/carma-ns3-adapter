@@ -2,7 +2,7 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/docker-existing-dockerfile
 {
 	"name": "CARMA Base Environment",
-	"image": "usdotfhwastol/carma-base:develop",
+	"image": "usdotfhwastoldev/carma-base:develop",
 	"customizations": {
 		"vscode": {
 			"extensions": [
