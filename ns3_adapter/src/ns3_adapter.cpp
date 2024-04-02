@@ -39,8 +39,9 @@ void NS3Adapter::initialize() {
     loadWaveConfig(wave_cfg_file);
 
     // Start the handshake
+  
     pnh_->getParam("/vehicle_id", vehicle_id_);
-    pnh_->getParam("carla/ego_vehicle/role_name", role_id_);
+    pnh.param<std::string>("role_id", role_id_, "carma_1");
     pnh.param<std::string>("ns3_address", ns3_address_, "172.2.0.2");
     pnh.param<int>("ns3_registration_port", ns3_registration_port_, 1515);
     pnh.param<int>("ns3_broadcasting_port", ns3_broadcasting_port_, 1516);
