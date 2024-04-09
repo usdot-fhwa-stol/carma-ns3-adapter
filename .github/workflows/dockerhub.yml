@@ -4,10 +4,6 @@ on:
   push:
     branches:
       - "develop"
-      - "master"
-      - "release/*"
-      - "release/lavida"
-
 jobs:
   docker:
     runs-on: ubuntu-latest
