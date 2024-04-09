@@ -34,11 +34,12 @@
   <build_depend>carma_cmake_common</build_depend>
   <depend>cav_msgs</depend>
   <depend>cav_srvs</depend>
+  <depend>rosgraph_msgs</depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>dynamic_reconfigure</exec_depend>
   <exec_depend>bondcpp</exec_depend>
 
-  
+
 
 
   <!-- The export tag contains other, unspecified, tags -->

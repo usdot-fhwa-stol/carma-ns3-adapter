@@ -13,20 +13,21 @@ find_package(catkin REQUIRED COMPONENTS
   ##cav_driver_utils
   cav_msgs
   cav_srvs
+  rosgraph_msgs
   roscpp
   bondcpp
   dynamic_reconfigure
 )
+add_definitions(-DRAPIDJSON_HAS_STDSTRING=1)
 
 add_executable( ${PROJECT_NAME}
   ${headers}
   src/ns3_client.cpp
   src/ns3_adapter.cpp
-  src/ns3_reg_client.cpp
   src/driver_application/driver_application.cpp
   src/driver_wrapper/driver_wrapper.cpp
   src/main.cpp)
-add_library(ns3_adapter_library src/ns3_adapter.cpp src/ns3_client.cpp src/ns3_reg_client.cpp src/main.cpp src/driver_application/driver_application.cpp src/driver_wrapper/driver_wrapper.cpp)
+add_library(ns3_adapter_library src/ns3_adapter.cpp src/ns3_client.cpp src/main.cpp src/driver_application/driver_application.cpp src/driver_wrapper/driver_wrapper.cpp)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 add_dependencies(${PROJECT_NAME} ${catkin_EXPORTED_TARGETS})
 add_dependencies(ns3_adapter_library ${catkin_EXPORTED_TARGETS})
@@ -82,7 +83,7 @@ install(DIRECTORY launch config
 #############
 
 ## Add gtest based cpp test target and link libraries
-catkin_add_gtest(${PROJECT_NAME}-test 
+catkin_add_gtest(${PROJECT_NAME}-test
 test/test_ns3_adapter.cpp
 test/test_main.cpp)
 target_link_libraries(${PROJECT_NAME}-test ns3_adapter_library ${catkin_LIBRARIES})
