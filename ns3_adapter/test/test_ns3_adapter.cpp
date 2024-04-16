@@ -63,8 +63,6 @@ TEST(NS3AdapterTest, testpackMessage)
 
     ASSERT_GT(pm.size(), 0);
     ASSERT_EQ(pm.size(), 150); //not 189 because VehicleID, VehiclePosX and VehiclePosY is turned off
-
-
 }
 
 TEST(NS3AdapterTest, testonOutboundMessage)
