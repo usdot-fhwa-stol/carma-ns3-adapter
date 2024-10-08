@@ -100,14 +100,14 @@
   {
     "name" : "SSM",
     "psid" : "8002",
-    "dsrc_id" : "29",
+    "dsrc_id" : "30",
     "channel" : "182",
     "priority" : "6"
   },
   {
     "name" : "SRM",
     "psid" : "8002",
-    "dsrc_id" : "30",
+    "dsrc_id" : "29",
     "channel" : "182",
     "priority" : "6"
   }

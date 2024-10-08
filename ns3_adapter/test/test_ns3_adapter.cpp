@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 #include <ros/ros.h>
 
-TEST(NS3AdapterTest, DISABLED_testOnConnectHandler)
+TEST(NS3AdapterTest, testOnConnectHandler)
 {
     int argc = 1;
     //char* argv[] {c[0], c[1]};
@@ -14,7 +14,7 @@ TEST(NS3AdapterTest, DISABLED_testOnConnectHandler)
     EXPECT_EQ(worker.getDriverStatus().status, cav_msgs::DriverStatus::OPERATIONAL);
 }
 
-TEST(NS3AdapterTest, DISABLED_testOnDisconnectHandler)
+TEST(NS3AdapterTest, testOnDisconnectHandler)
 {
     int argc = 1;
     char c[2][2] = {{'a','b'}, {'c','d'}};
@@ -27,7 +27,7 @@ TEST(NS3AdapterTest, DISABLED_testOnDisconnectHandler)
 
 }
 
-TEST(NS3AdapterTest, DISABLED_testOnMsgReceivedHandler)
+TEST(NS3AdapterTest, testOnMsgReceivedHandler)
 {
    int argc = 1;
     char c[2][2] = {{'a','b'}, {'c','d'}};
@@ -45,7 +45,7 @@ TEST(NS3AdapterTest, DISABLED_testOnMsgReceivedHandler)
 
 }
 
-TEST(NS3AdapterTest, DISABLED_testpackMessage)
+TEST(NS3AdapterTest, testpackMessage)
 {
     int argc = 1;
     char c[2][2] = {{'a','b'}, {'c','d'}};
@@ -146,7 +146,7 @@ TEST(NS3AdapterTest, testpackSSMMessage)
 }
 
 
-TEST(NS3AdapterTest, DISABLED_testSendMessageSrv)
+TEST(NS3AdapterTest, testSendMessageSrv)
 {
     int argc = 1;
     char c[2][2] = {{'a','b'}, {'c','d'}};
@@ -166,7 +166,7 @@ TEST(NS3AdapterTest, DISABLED_testSendMessageSrv)
 
 }
 
-TEST(NS3AdapterTest, DISABLED_testcompose_handshake_msg)
+TEST(NS3AdapterTest, testcompose_handshake_msg)
 {
     int argc = 1;
     char c[2][2] = {{'a','b'}, {'c','d'}};
