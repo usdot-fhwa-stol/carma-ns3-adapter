@@ -63,19 +63,6 @@ class NS3Adapter : public cav::DriverApplication
                                          priority(priority) {}
     };
 
-    public:
-
-        /**
-        * @brief constructor
-        * @param argc - command line argument count
-        * @param argv - command line arguments
-        */
-        NS3Adapter(int argc, char** argv);
-
-        ~NS3Adapter() { shutdown(); }
-
-    private:
-
         std::vector<std::string> api_;
 
         //ROS
@@ -154,6 +141,17 @@ class NS3Adapter : public cav::DriverApplication
 
 
     public:
+
+        /**
+        * @brief constructor
+        * @param argc - command line argument count
+        * @param argv - command line arguments
+        */
+        NS3Adapter(int argc, char** argv);
+
+        ~NS3Adapter() { shutdown(); }
+
+        std::string getMessageNamefromId(uint16_t id);
         /**
         * @brief Handles the NS-3 onConnect Event
         *

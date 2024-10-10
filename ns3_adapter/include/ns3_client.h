@@ -26,6 +26,7 @@
 #include <vector>
 #include <rapidjson/document.h>
 #include <rapidjson/rapidjson.h>
+#include <gtest/gtest.h>
 
 #include "udp_listener.h"
 
@@ -99,6 +100,10 @@ public:
      * @brief sends a udp registration message
      */
     bool sendRegistrationMessage(const std::shared_ptr<std::vector<uint8_t>>&message);
+
+    FRIEND_TEST(NS3Adapter, testNS3ClientSSM);
+
+    FRIEND_TEST(NS3Adapter, testNS3ClientSRM);
 
 
 private:

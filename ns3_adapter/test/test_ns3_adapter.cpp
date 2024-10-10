@@ -2,6 +2,16 @@
 #include <gtest/gtest.h>
 #include <ros/ros.h>
 
+class NS3AdapterTest{
+    public:
+        std::vector<uint8_t> msg_data_;
+        uint16_t msg_id_;
+        void onMessageReceivedHandler(const std::vector<uint8_t> &data, uint16_t id) {
+            msg_id_ = id;
+            msg_data_ = data;
+        }
+};
+
 TEST(NS3AdapterTest, testOnConnectHandler)
 {
     int argc = 1;
@@ -174,4 +184,44 @@ TEST(NS3AdapterTest, testcompose_handshake_msg)
     NS3Adapter worker(argc,argv);
     std::string result = worker.compose_handshake_msg("default_id", "ego1", 2000, 2001, "127.0.0.1");
     EXPECT_EQ(result, "{\"carmaVehicleId\":\"default_id\",\"carlaVehicleRole\":\"ego1\",\"rxMessageIpAddress\":\"127.0.0.1\",\"rxMessagePort\":2000,\"rxTimeSyncPort\":2001}");
+}
+
+TEST(NS3Adapter, testNS3ClientSSM)
+{
+
+    NS3Client client;
+    int argc = 1;
+    char c[2][2] = {{'a','b'}, {'c','d'}};
+    char* argv[] {c[0], c[1]};
+    std::shared_ptr<NS3AdapterTest> test_worker = std::make_shared<NS3AdapterTest>();
+
+    auto worker = std::make_shared<NS3Adapter>(argc,argv);
+    worker->loadWaveConfig(WAVE_CFG_FILE_PATH);
+    client.onMessageReceived.connect([test_worker](std::vector<uint8_t> const &msg, uint16_t id) {test_worker->onMessageReceivedHandler(msg, id); });
+
+
+    std::vector<uint8_t> content = {0,30,62,101,68,151,210,240,8,0,36,0,0,15,172,75,144,0,0,9,100,20,18,0,32,0,0,64,5,1,244,17,114,0,0,1,46,130,134,64,6,0,0,8,0,176,62,130,46,64,0,0,38,32,80,196,128,192,0,1,0,22,7,208,0};
+    client.process(std::make_shared<std::vector<uint8_t>>(content));
+
+    EXPECT_EQ(worker->getMessageNamefromId(test_worker->msg_id_), "SSM");
+}
+
+TEST(NS3Adapter, testNS3ClientSRM)
+{
+
+    NS3Client client;
+    int argc = 1;
+    char c[2][2] = {{'a','b'}, {'c','d'}};
+    char* argv[] {c[0], c[1]};
+    std::shared_ptr<NS3AdapterTest> test_worker = std::make_shared<NS3AdapterTest>();
+
+    auto worker = std::make_shared<NS3Adapter>(argc,argv);
+    worker->loadWaveConfig(WAVE_CFG_FILE_PATH);
+    client.onMessageReceived.connect([test_worker](std::vector<uint8_t> const &msg, uint16_t id) {test_worker->onMessageReceivedHandler(msg, id); });
+
+
+    std::vector<uint8_t> content = {0,29,43,112,191,41,206,32,1,3,132,0,1,156,44,0,128,209,126,83,186,40,0,4,96,35,181,201,99,0,65,169,27,118,237,69,36,242,169,101,157,70,253,56,221,192};
+    client.process(std::make_shared<std::vector<uint8_t>>(content));
+
+    EXPECT_EQ(worker->getMessageNamefromId(test_worker->msg_id_), "SRM");
 }

@@ -40,7 +40,7 @@ void NS3Adapter::initialize() {
     loadWaveConfig(wave_cfg_file);
 
     // Start the handshake
-  
+
     pnh_->getParam("/vehicle_id", vehicle_id_);
     pnh.param<std::string>("role_id", role_id_, "carma_1");
     pnh.param<std::string>("ns3_address", ns3_address_, "172.2.0.2");
@@ -125,20 +125,25 @@ void NS3Adapter::onTimeReceivedHandler(unsigned long timestamp)
 void NS3Adapter::onMessageReceivedHandler(const std::vector<uint8_t> &data, uint16_t id) {
     // Create and populate the message
     ROS_WARN_STREAM("in onMessageReceivedHandler");
-    auto it = std::find_if(wave_cfg_items_.begin(),wave_cfg_items_.end(),[id](const WaveConfigStruct& entry)
-                                                                            {
-                                                                               return entry.ns3_id == std::to_string(id);
-                                                                            });
 
     cav_msgs::ByteArray msg;
     msg.header.stamp = ros::Time::now();
     msg.header.frame_id = "";
-    msg.message_type = it != wave_cfg_items_.end() ? it->name : "Unknown";
+    msg.message_type = getMessageNamefromId(id);
     msg.content = data;
     // Publish it
     comms_pub_.publish(msg);
 
     ROS_WARN_STREAM("Application received Data: " << data.size() << " bytes, message: " << uint8_vector_to_hex_string(data));
+}
+
+std::string NS3Adapter::getMessageNamefromId(uint16_t id)
+{
+    auto it = std::find_if(wave_cfg_items_.begin(),wave_cfg_items_.end(),[id](const WaveConfigStruct& entry)
+                                                                            {
+                                                                               return entry.ns3_id == std::to_string(id);
+                                                                            });
+    return (it != wave_cfg_items_.end() ? it->name : "Unknown");
 }
 
 /**
