@@ -208,7 +208,7 @@ void NS3Client::process(const std::shared_ptr<const std::vector<uint8_t>>& data)
     }
 }
 
-bool NS3Client::sendNS3Message(const std::shared_ptr<std::vector<uint8_t>>&message) {
+bool NS3Client::send_ns3_message(const std::shared_ptr<std::vector<uint8_t>>&message) {
     if(!running_) return false;
     try {
         output_strand_->post([this,message]()
@@ -233,7 +233,7 @@ bool NS3Client::sendNS3Message(const std::shared_ptr<std::vector<uint8_t>>&messa
     }
 }
 
-bool NS3Client::sendRegistrationMessage(const std::shared_ptr<std::vector<uint8_t>>&message) {
+bool NS3Client::send_registration_message(const std::shared_ptr<std::vector<uint8_t>>&message) {
     if(!running_) return false;
     try {
         output_strand_->post([this,message]()

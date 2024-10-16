@@ -37,7 +37,7 @@ void NS3Adapter::initialize() {
     comms_api_nh_.reset(new ros::NodeHandle("comms"));
 
     pnh_->param<std::string>("wave_cfg_file",wave_cfg_file,"/opt/carma/install/ns3_adapter/share/ns3_adapter/config/wave.json");
-    loadWaveConfig(wave_cfg_file);
+    load_wave_config(wave_cfg_file);
 
     // Start the handshake
 
@@ -52,8 +52,8 @@ void NS3Adapter::initialize() {
 
     //Setup connection handlers
     ns3_client_error_.clear();
-    ns3_client_.onConnect.connect([this]() { onConnectHandler(); });
-    ns3_client_.onDisconnect.connect([this]() { onDisconnectHandler(); });
+    ns3_client_.onConnect.connect([this]() { on_connect_handler(); });
+    ns3_client_.onDisconnect.connect([this]() { on_disconnect_handler(); });
     ns3_client_.onError.connect([this](const boost::system::error_code& err){ns3_client_error_ = err;});
 
     //Setup the ROS API
@@ -61,7 +61,7 @@ void NS3Adapter::initialize() {
     api_.clear();
 
     //Comms Subscriber
-    comms_sub_ = comms_api_nh_->subscribe("outbound_binary_msg", queue_size_, &NS3Adapter::onOutboundMessage, this);
+    comms_sub_ = comms_api_nh_->subscribe("outbound_binary_msg", queue_size_, &NS3Adapter::on_outbound_message, this);
     api_.push_back(comms_sub_.getTopic());
 
     //Comms Publisher
@@ -73,32 +73,32 @@ void NS3Adapter::initialize() {
     api_.push_back(time_pub_.getTopic());
 
     //Comms Service
-    comms_srv_ = comms_api_nh_->advertiseService("send", &NS3Adapter::sendMessageSrv, this);
+    comms_srv_ = comms_api_nh_->advertiseService("send", &NS3Adapter::send_message_srv, this);
     api_.push_back(comms_srv_.getService());
 
     pose_sub_ = pnh_->subscribe("current_pose", 1, &NS3Adapter::pose_cb, this);
 
-    ns3_client_.onMessageReceived.connect([this](std::vector<uint8_t> const &msg, uint16_t id) {onMessageReceivedHandler(msg, id); });
-    ns3_client_.onTimeReceived.connect([this](unsigned long timestamp) {onTimeReceivedHandler(timestamp); });
+    ns3_client_.onMessageReceived.connect([this](std::vector<uint8_t> const &msg, uint16_t id) {on_message_received_handler(msg, id); });
+    ns3_client_.onTimeReceived.connect([this](unsigned long timestamp) {on_time_received_handler(timestamp); });
 
     spin_rate = 10;
 }
 
-void NS3Adapter::onConnectHandler() {
+void NS3Adapter::on_connect_handler() {
     ROS_WARN_STREAM("NS-3 Adapter Connected");
     cav_msgs::DriverStatus status = getStatus();
     status.status = cav_msgs::DriverStatus::OPERATIONAL;
     setStatus(status);
 }
 
-void NS3Adapter::onDisconnectHandler() {
+void NS3Adapter::on_disconnect_handler() {
     cav_msgs::DriverStatus status = getStatus();
     status.status = cav_msgs::DriverStatus::OFF;
     setStatus(status);
     ROS_WARN_STREAM("NS-3 Adapter Disconnected");
 }
 
-void NS3Adapter::onTimeReceivedHandler(unsigned long timestamp)
+void NS3Adapter::on_time_received_handler(unsigned long timestamp)
 {
     rosgraph_msgs::Clock time_now;
     // A script to validate time synchronization of tools in CDASim currently relies on the following
@@ -122,14 +122,14 @@ void NS3Adapter::onTimeReceivedHandler(unsigned long timestamp)
 * Populates a ROS message with the contents of the incoming OBU message, and
 * publishes to the ROS 'recv' topic.
 */
-void NS3Adapter::onMessageReceivedHandler(const std::vector<uint8_t> &data, uint16_t id) {
+void NS3Adapter::on_message_received_handler(const std::vector<uint8_t> &data, uint16_t id) {
     // Create and populate the message
-    ROS_WARN_STREAM("in onMessageReceivedHandler");
+    ROS_WARN_STREAM("in on_message_received_handler");
 
     cav_msgs::ByteArray msg;
     msg.header.stamp = ros::Time::now();
     msg.header.frame_id = "";
-    msg.message_type = getMessageNamefromId(id);
+    msg.message_type = get_message_name_from_id(id);
     msg.content = data;
     // Publish it
     comms_pub_.publish(msg);
@@ -137,7 +137,7 @@ void NS3Adapter::onMessageReceivedHandler(const std::vector<uint8_t> &data, uint
     ROS_WARN_STREAM("Application received Data: " << data.size() << " bytes, message: " << uint8_vector_to_hex_string(data));
 }
 
-std::string NS3Adapter::getMessageNamefromId(uint16_t id)
+std::string NS3Adapter::get_message_name_from_id(uint16_t id)
 {
     auto it = std::find_if(wave_cfg_items_.begin(),wave_cfg_items_.end(),[id](const WaveConfigStruct& entry)
                                                                             {
@@ -157,7 +157,7 @@ std::string NS3Adapter::getMessageNamefromId(uint16_t id)
  * Depending on what the input is, that might be all that's necessary, but possibly more.
  * Depending on what the input is, that might be all that's necessary, but possibly more.
  */
-std::vector<uint8_t> NS3Adapter::packMessage(const cav_msgs::ByteArray& message) {
+std::vector<uint8_t> NS3Adapter::pack_message(const cav_msgs::ByteArray& message) {
     std::stringstream ss;
     auto wave_item = std::find_if(wave_cfg_items_.begin(),wave_cfg_items_.end(),[&message](const WaveConfigStruct& entry)
     {
@@ -208,8 +208,8 @@ std::vector<uint8_t> NS3Adapter::packMessage(const cav_msgs::ByteArray& message)
 *
 * This method receives a message from the ROS network, and adds it to the send queue.
 */
-void NS3Adapter::onOutboundMessage(const cav_msgs::ByteArrayPtr& message) {
-    ROS_WARN_STREAM("in onOutboundMessage");
+void NS3Adapter::on_outbound_message(const cav_msgs::ByteArrayPtr& message) {
+    ROS_WARN_STREAM("in on_outbound_message");
     ROS_WARN_STREAM("message received: " << message->message_type);
     ROS_WARN_STREAM("connected: " << ns3_client_.connected());
     if(!ns3_client_.connected())
@@ -218,7 +218,7 @@ void NS3Adapter::onOutboundMessage(const cav_msgs::ByteArrayPtr& message) {
         return;
     }
 
-    std::shared_ptr<std::vector<uint8_t>> message_content = std::make_shared<std::vector<uint8_t>>(std::move(packMessage(*message)));
+    std::shared_ptr<std::vector<uint8_t>> message_content = std::make_shared<std::vector<uint8_t>>(std::move(pack_message(*message)));
     send_msg_queue_.push_back(std::move(message_content));
     ROS_WARN_STREAM("queue size: " << send_msg_queue_.size());
 }
@@ -226,10 +226,10 @@ void NS3Adapter::onOutboundMessage(const cav_msgs::ByteArrayPtr& message) {
 /**
 * @brief Sends a message from the queue of outbound messages
 */
-void NS3Adapter::sendMessageFromQueue() {
+void NS3Adapter::send_message_from_queue() {
     if (!send_msg_queue_.empty()) {
         ROS_DEBUG_STREAM("Sending message: " << std::string(send_msg_queue_.front()->begin(),send_msg_queue_.front()->end()));
-        bool success = ns3_client_.sendNS3Message(send_msg_queue_.front());
+        bool success = ns3_client_.send_ns3_message(send_msg_queue_.front());
         send_msg_queue_.pop_front();
         if (!success) {
             ROS_WARN_STREAM("Message send failed");
@@ -245,7 +245,7 @@ void NS3Adapter::sendMessageFromQueue() {
 * @param req
 * @param res
 */
-bool NS3Adapter::sendMessageSrv(cav_srvs::SendMessage::Request& req, cav_srvs::SendMessage::Response& res) {
+bool NS3Adapter::send_message_srv(cav_srvs::SendMessage::Request& req, cav_srvs::SendMessage::Response& res) {
     if(!ns3_client_.connected())
     {
         ROS_WARN_STREAM("Outbound message received but node is not connected to NS-3 Radio");
@@ -253,11 +253,11 @@ bool NS3Adapter::sendMessageSrv(cav_srvs::SendMessage::Request& req, cav_srvs::S
         return true;
     }
 
-    // Package data into a message shared pointer; this lets packMessage have
+    // Package data into a message shared pointer; this lets pack_message have
     // the same interface for outgoing messages from the topic and service.
     const cav_msgs::ByteArray::ConstPtr message = cav_msgs::ByteArray::ConstPtr(new cav_msgs::ByteArray(req.message_to_send));
-    std::shared_ptr<std::vector<uint8_t>> message_data = std::make_shared<std::vector<uint8_t>>(std::move(packMessage(*message)));
-    bool success = ns3_client_.sendNS3Message(message_data);
+    std::shared_ptr<std::vector<uint8_t>> message_data = std::make_shared<std::vector<uint8_t>>(std::move(pack_message(*message)));
+    bool success = ns3_client_.send_ns3_message(message_data);
     if (success) {
         ROS_DEBUG("SendMessage service returned success");
         res.errorStatus = 0;
@@ -314,15 +314,15 @@ void NS3Adapter::pre_spin()
     }
 
     std::string handshake_msg = compose_handshake_msg(vehicle_id_, role_id_, ns3_v2x_listening_port_, ns3_time_listening_port_, host_ip_);
-    broadcastHandshakemsg(handshake_msg);
+    broadcast_handshake_msg(handshake_msg);
 }
 
 
 void NS3Adapter::post_spin() {
-    sendMessageFromQueue();
+    send_message_from_queue();
 }
 
-void NS3Adapter::loadWaveConfig(const std::string &fileName)
+void NS3Adapter::load_wave_config(const std::string &fileName)
 {
     ROS_DEBUG_STREAM("Loading wave config");
 
@@ -467,13 +467,13 @@ std::string NS3Adapter::compose_handshake_msg(const std::string& veh_id, const s
     return strbufstring;
 }
 
-void NS3Adapter::broadcastHandshakemsg(const std::string& msg_string)
+void NS3Adapter::broadcast_handshake_msg(const std::string& msg_string)
 {
-    ROS_DEBUG_STREAM("Attempting to broadcastHandshakemsg: " << msg_string);
+    ROS_DEBUG_STREAM("Attempting to broadcast_handshake_msg: " << msg_string);
     auto msg_vector = std::vector<uint8_t>(msg_string.begin(), msg_string.end());
     std::shared_ptr<std::vector<uint8_t>> message_content = std::make_shared<std::vector<uint8_t>>(std::move(msg_vector));
 
-    bool success = ns3_client_.sendRegistrationMessage(message_content);
+    bool success = ns3_client_.send_registration_message(message_content);
     ROS_DEBUG_STREAM("ns3_address_: " << ns3_address_);
     ROS_DEBUG_STREAM("ns3_registration_port_: " << ns3_registration_port_);
     ROS_DEBUG_STREAM("ns3_v2x_listening_port_: " << ns3_v2x_listening_port_);
@@ -487,12 +487,12 @@ void NS3Adapter::broadcastHandshakemsg(const std::string& msg_string)
     }
 }
 
-cav_msgs::DriverStatus NS3Adapter::getDriverStatus()
+cav_msgs::DriverStatus NS3Adapter::get_driver_status()
 {
     return getStatus();
 }
 
-std::deque<std::shared_ptr<std::vector<uint8_t>>> NS3Adapter::getMsgQueue()
+std::deque<std::shared_ptr<std::vector<uint8_t>>> NS3Adapter::get_msg_queue()
 {
     return send_msg_queue_;
 }

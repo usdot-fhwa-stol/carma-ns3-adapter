@@ -94,12 +94,12 @@ public:
     /**
      * @brief sends a udp v2x message
      */
-    bool sendNS3Message(const std::shared_ptr<std::vector<uint8_t>>&message);
+    bool send_ns3_message(const std::shared_ptr<std::vector<uint8_t>>&message);
 
     /**
      * @brief sends a udp registration message
      */
-    bool sendRegistrationMessage(const std::shared_ptr<std::vector<uint8_t>>&message);
+    bool send_registration_message(const std::shared_ptr<std::vector<uint8_t>>&message);
 
     FRIEND_TEST(NS3Adapter, testNS3ClientSSM);
 
