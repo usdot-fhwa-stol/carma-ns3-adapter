@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * Copyright (C) 2019-2022 LEIDOS.
+ * Copyright (C) 2019-2024 LEIDOS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -62,19 +62,6 @@ class NS3Adapter : public cav::DriverApplication
                                          channel(channel),
                                          priority(priority) {}
     };
-
-    public:
-
-        /**
-        * @brief constructor
-        * @param argc - command line argument count
-        * @param argv - command line arguments
-        */
-        NS3Adapter(int argc, char** argv);
-
-        ~NS3Adapter() { shutdown(); }
-
-    private:
 
         std::vector<std::string> api_;
 
@@ -154,19 +141,29 @@ class NS3Adapter : public cav::DriverApplication
 
 
     public:
+
+        /**
+        * @brief constructor
+        * @param argc - command line argument count
+        * @param argv - command line arguments
+        */
+        NS3Adapter(int argc, char** argv);
+
+        ~NS3Adapter() { shutdown(); }
+
         /**
         * @brief Handles the NS-3 onConnect Event
         *
         * Establishes status of the node
         */
-        void onConnectHandler();
+        void on_connect_handler();
 
         /**
         * @brief Handles the NS-3 onDisconnect Event
         *
         * On Disconnect this node will enter a reconnect loop attempting to reconnect
         */
-        void onDisconnectHandler();
+        void on_disconnect_handler();
 
         /**
         * @brief Handles messages received from the NS-3 Client
@@ -174,14 +171,14 @@ class NS3Adapter : public cav::DriverApplication
         * Populates a ROS message with the contents of the incoming OBU message, and
         * publishes to the ROS 'inbound_binary_msg' topic.
         */
-        void onMessageReceivedHandler(const std::vector<uint8_t> &data, uint16_t id);
+        void on_message_received_handler(const std::vector<uint8_t> &data, uint16_t id);
 
         /**
         * @brief Handles TimeSync messages received from the NS-3 Ambassador
         *
         * publishes to the ROS '/sim_clock' topic to broadcast current simulation time in MOSAIC
         */
-        void onTimeReceivedHandler(unsigned long);
+        void on_time_received_handler(unsigned long);
 
         /**
         * @brief Packs an outgoing message into J2375 standard.
@@ -190,7 +187,7 @@ class NS3Adapter : public cav::DriverApplication
         * This processes an incoming ByteArray message, and packs it according to the
         * Active Message file for the OSU.
         */
-        std::vector<uint8_t> packMessage(const cav_msgs::ByteArray& message);
+        std::vector<uint8_t> pack_message(const cav_msgs::ByteArray& message);
 
         /**
         * @brief Handles outbound messages from the ROS network
@@ -199,7 +196,7 @@ class NS3Adapter : public cav::DriverApplication
         * This method packs the message according to the J2375 2016 standard,
         * and sends it to the client program
         */
-        void onOutboundMessage(const cav_msgs::ByteArrayPtr& message);
+        void on_outbound_message(const cav_msgs::ByteArrayPtr& message);
 
         /**
         * @brief Message sending service
@@ -207,12 +204,12 @@ class NS3Adapter : public cav::DriverApplication
         * @param res
         *
         */
-        bool sendMessageSrv(cav_srvs::SendMessage::Request& req, cav_srvs::SendMessage::Response& res);
+        bool send_message_srv(cav_srvs::SendMessage::Request& req, cav_srvs::SendMessage::Response& res);
 
         /**
         * @brief Sends a message from the queue of outbound messages
         */
-        void sendMessageFromQueue();
+        void send_message_from_queue();
 
         /**
         * @brief Callback for dynamic reconfig service
@@ -226,7 +223,7 @@ class NS3Adapter : public cav::DriverApplication
         * @brief Loads the wave file with the given name for configuring WAVE message ids with channel and PSID
         * @param fileName
         */
-        void loadWaveConfig(const std::string& fileName);
+        void load_wave_config(const std::string& fileName);
 
         void pose_cb(geometry_msgs::PoseStamped pose_msg);
 
@@ -237,11 +234,11 @@ class NS3Adapter : public cav::DriverApplication
         */
         std::string compose_handshake_msg(const std::string& veh_id, const std::string& role_id, int message_port, int time_port, const std::string& ip);
 
-        void broadcastHandshakemsg(const std::string& msg_string);
+        void broadcast_handshake_msg(const std::string& msg_string);
 
-        cav_msgs::DriverStatus getDriverStatus();
+        cav_msgs::DriverStatus get_driver_status();
 
-        std::deque<std::shared_ptr<std::vector<uint8_t>>> getMsgQueue();
+        std::deque<std::shared_ptr<std::vector<uint8_t>>> get_msg_queue();
 
         /**
         * @brief converts a uint8_t vector to an ascii representation
@@ -249,4 +246,13 @@ class NS3Adapter : public cav::DriverApplication
         * @return
         */
         std::string uint8_vector_to_hex_string(const std::vector<uint8_t>& v);
+
+        /**
+        * @brief Returns the message name from the configured wave.json given an id
+        * @param id: ID of the message to return a corresponding name for
+        * @return configured name of the message
+        *
+        * Establishes status of the node
+        */
+        std::string get_message_name_from_id(uint16_t id);
 };

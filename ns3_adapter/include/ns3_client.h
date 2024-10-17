@@ -1,7 +1,7 @@
 #pragma once
 
 /*
- * Copyright (C) 2019-2022 LEIDOS.
+ * Copyright (C) 2019-2024 LEIDOS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -26,6 +26,7 @@
 #include <vector>
 #include <rapidjson/document.h>
 #include <rapidjson/rapidjson.h>
+#include <gtest/gtest.h>
 
 #include "udp_listener.h"
 
@@ -93,12 +94,16 @@ public:
     /**
      * @brief sends a udp v2x message
      */
-    bool sendNS3Message(const std::shared_ptr<std::vector<uint8_t>>&message);
+    bool send_ns3_message(const std::shared_ptr<std::vector<uint8_t>>&message);
 
     /**
      * @brief sends a udp registration message
      */
-    bool sendRegistrationMessage(const std::shared_ptr<std::vector<uint8_t>>&message);
+    bool send_registration_message(const std::shared_ptr<std::vector<uint8_t>>&message);
+
+    FRIEND_TEST(NS3Adapter, testNS3ClientSSM);
+
+    FRIEND_TEST(NS3Adapter, testNS3ClientSRM);
 
 
 private:
