@@ -456,11 +456,11 @@ std::string NS3Adapter::compose_handshake_msg(const std::string& veh_id, const s
 
     rapidjson::Value idtextPart;
 	idtextPart.SetString(veh_id.c_str(), allocator);
-    document.AddMember("carmaVehicleId", idtextPart, allocator);
+    document.AddMember("vehicleId", idtextPart, allocator);
 
     rapidjson::Value roletextPart;
 	roletextPart.SetString(role_id.c_str(), allocator);
-    document.AddMember("carlaVehicleRole", roletextPart, allocator);
+    document.AddMember("vehicleRole", roletextPart, allocator);
 
     rapidjson::Value iptextPart;
 	iptextPart.SetString(ip.c_str(), allocator);

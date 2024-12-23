@@ -199,7 +199,7 @@ TEST(NS3AdapterTest, testcompose_handshake_msg)
     char* argv[] {c[0], c[1]};
     NS3Adapter worker(argc,argv);
     std::string result = worker.compose_handshake_msg("default_id", "ego1", 2000, 2001, "127.0.0.1");
-    EXPECT_EQ(result, "{\"carmaVehicleId\":\"default_id\",\"carlaVehicleRole\":\"ego1\",\"rxMessageIpAddress\":\"127.0.0.1\",\"rxMessagePort\":2000,\"rxTimeSyncPort\":2001}");
+    EXPECT_EQ(result, "{\"vehicleId\":\"default_id\",\"vehicleRole\":\"ego1\",\"rxMessageIpAddress\":\"127.0.0.1\",\"rxMessagePort\":2000,\"rxTimeSyncPort\":2001}");
 }
 
 TEST(NS3Adapter, testNS3ClientSSM)
