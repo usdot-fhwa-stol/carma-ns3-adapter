@@ -11,6 +11,9 @@ on:
 jobs:
   dockerhub:
     uses: usdot-fhwa-stol/actions/.github/workflows/dockerhub.yml@main
+    with:
+      tag_name_suffix: "carma-system-4.5.0"
+      image_name: "carma-base"
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
