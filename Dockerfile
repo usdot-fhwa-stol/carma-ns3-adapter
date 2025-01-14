@@ -14,7 +14,7 @@
 
 ARG DOCKER_ORG="usdotfhwastol"
 ARG DOCKER_TAG="carma-system-4.5.0"
-FROM ${DOCKER_ORG}/carma-base:${DOCKER_TAG} as base_image
+FROM usdotfhwastol/carma-base:carma-system-4.5.0 as base_image
 FROM base_image as setup
 ARG GIT_BRANCH="release/prowler"
 
