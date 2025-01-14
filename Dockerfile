@@ -12,8 +12,8 @@
 #  License for the specific language governing permissions and limitations under
 #  the License.
 
-ARG DOCKER_ORG="usdotfhwastol"
-ARG DOCKER_TAG="carma-system-4.5.0"
+ARG DOCKER_ORG="usdotfhwastolcandidate"
+ARG DOCKER_TAG="prowler"
 FROM usdotfhwastol/carma-base:carma-system-4.5.0 as base_image
 FROM base_image as setup
 ARG GIT_BRANCH="release/prowler"
