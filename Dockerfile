@@ -12,11 +12,11 @@
 #  License for the specific language governing permissions and limitations under
 #  the License.
 
-ARG DOCKER_ORG="usdotfhwastolcandidate"
-ARG DOCKER_TAG="prowler"
+ARG DOCKER_ORG="usdotfhwastol"
+ARG DOCKER_TAG="carma-system-4.9.0"
 FROM usdotfhwastol/carma-base:carma-system-4.5.0 as base_image
 FROM base_image as setup
-ARG GIT_BRANCH="release/prowler"
+ARG GIT_BRANCH="carma-system-4.5.0"
 
 ARG ROS1_PACKAGES=""
 ENV ROS1_PACKAGES=${ROS1_PACKAGES}
