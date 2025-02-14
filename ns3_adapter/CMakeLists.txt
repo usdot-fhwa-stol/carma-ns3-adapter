@@ -81,15 +81,15 @@ install(DIRECTORY launch config
 #############
 ## Testing ##
 #############
+if (CATKIN_ENABLE_TESTING)
+  ## Add gtest based cpp test target and link libraries
+  catkin_add_gtest(${PROJECT_NAME}-test
+  test/test_ns3_adapter.cpp
+  test/test_main.cpp)
+  set(WAVE_CFG_FILE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/config/wave.json)
 
-## Add gtest based cpp test target and link libraries
-catkin_add_gtest(${PROJECT_NAME}-test
-test/test_ns3_adapter.cpp
-test/test_main.cpp)
-target_link_libraries(${PROJECT_NAME}-test ns3_adapter_library ${catkin_LIBRARIES})
+  target_link_libraries(${PROJECT_NAME}-test ns3_adapter_library ${catkin_LIBRARIES})
+  target_compile_definitions(${PROJECT_NAME}-test PRIVATE WAVE_CFG_FILE_PATH="${WAVE_CFG_FILE_PATH}")
+endif()
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
-
-
-
-

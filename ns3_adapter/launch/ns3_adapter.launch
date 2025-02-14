@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-  Copyright (C) 2023 LEIDOS.
+  Copyright (C) 2023-2024 LEIDOS.
   Licensed under the Apache License, Version 2.0 (the "License"); you may not
   use this file except in compliance with the License. You may obtain a copy of
   the License at
@@ -25,7 +25,7 @@
     <node name="ns3_adapter" pkg="ns3_adapter" type="ns3_adapter" output="screen">
       <rosparam command="load" file="$(find ns3_adapter)/config/parameters.yaml"/>
       <remap from="comms/inbound_binary_msg" to="/hardware_interface/comms/inbound_binary_msg"/>
-      <remap from="comms/outbound_binary_msg" to="/hardware_interface/comms/outbound_binary_msg"/>    
+      <remap from="comms/outbound_binary_msg" to="/hardware_interface/comms/outbound_binary_msg"/>
       <param name="dsrc_address" value="$(arg dsrc_address)" />
       <param name="dsrc_listening_port" value="$(arg dsrc_listening_port)" />
       <param name="listening_port" value="$(arg listening_port)" />
