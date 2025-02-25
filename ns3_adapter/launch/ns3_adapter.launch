@@ -14,22 +14,71 @@
 <!--
   This file is used to launch the tactical intersection transit maneuvering plugin.
 -->
+<?xml version="1.0"?>
+<!--
+  Copyright (C) 2018-2023 LEIDOS.
 
+  Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  use this file except in compliance with the License. You may obtain a copy of
+  the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  License for the specific language governing permissions and limitations under
+  the License.
+-->
+<!--
+	carma_src.launch
+
+  The ros launch file for the CARMA 3 Platform ROS Network.
+  Launches all the needed ros nodes and sets up the parameter server.
+  Also sets up all static transforms used by tf2 within the system.
+
+  Use:
+  roslaunch carma carma.launch
+  After using source devel/setup.bash from workspace root.
+-->
 <launch>
-    <arg name="dsrc_address" default="127.0.01" />
-    <arg name="dsrc_listening_port" default="1516" />
-    <arg name="listening_port" default="5398" />
-    <arg name="wave_cfg_file" default="$(find ns3_adapter)/config/wave.json" />
-    <arg name="role_id" default="carma_1" />
+  <!-- Flag to toggle carma_record-->
+  <arg name="enable_ros1_record" default="false" doc="Flag to toggle carma_record"/>
 
-    <node name="ns3_adapter" pkg="ns3_adapter" type="ns3_adapter" output="screen">
-      <rosparam command="load" file="$(find ns3_adapter)/config/parameters.yaml"/>
-      <remap from="comms/inbound_binary_msg" to="/hardware_interface/comms/inbound_binary_msg"/>
-      <remap from="comms/outbound_binary_msg" to="/hardware_interface/comms/outbound_binary_msg"/>
-      <param name="dsrc_address" value="$(arg dsrc_address)" />
-      <param name="dsrc_listening_port" value="$(arg dsrc_listening_port)" />
-      <param name="listening_port" value="$(arg listening_port)" />
-      <param name="wave_cfg_file" value="$(arg wave_cfg_file)" />
-      <param name="role_id" value="$(arg role_id)" />
+  <!-- Directory of vehicle config parameters -->
+  <arg name="vehicle_config_dir" default="/opt/carma/vehicle/config" doc="The directory continaing vehicle config type parameters"/>
+  <arg name="vehicle_calibration_dir" default="/opt/carma/vehicle/calibration" doc="The directory continuing vehicle calibration type parameters"/>
+
+  <!-- Logging -->
+  <!-- ROS Bag -->
+  <arg name="rosbag_exclusions" default="/fake_exclusion" doc="Additional regex pattern to match for identifying what topics to exclude from rosbag recordings"/>
+
+  <!-- Run the node only if enable_ros1_record is toggled-->
+  <!-- Node exists in carma-utils repository-->
+  <group if="$(arg enable_ros1_record)">
+    <node name="carma_record" pkg="carma_record" type="carma_record" output="screen">
+      <param name="rosbag_exclusions" value="$(arg rosbag_exclusions)"/>
     </node>
+
+    <!-- Dump all ros parameters to a file -->
+    <node name="param_dump" pkg="carma_record" type="param_dump.sh"/>
+  </group>
+
+  <!-- Launch NS3 Adapter-->
+  <arg name="dsrc_address" default="127.0.01" />
+  <arg name="dsrc_listening_port" default="1516" />
+  <arg name="listening_port" default="5398" />
+  <arg name="wave_cfg_file" default="$(find ns3_adapter)/config/wave.json" />
+  <arg name="role_id" default="carma_1" />
+
+  <node name="ns3_adapter" pkg="ns3_adapter" type="ns3_adapter" output="screen">
+    <rosparam command="load" file="$(find ns3_adapter)/config/parameters.yaml"/>
+    <remap from="comms/inbound_binary_msg" to="/hardware_interface/comms/inbound_binary_msg"/>
+    <remap from="comms/outbound_binary_msg" to="/hardware_interface/comms/outbound_binary_msg"/>
+    <param name="dsrc_address" value="$(arg dsrc_address)" />
+    <param name="dsrc_listening_port" value="$(arg dsrc_listening_port)" />
+    <param name="listening_port" value="$(arg listening_port)" />
+    <param name="wave_cfg_file" value="$(arg wave_cfg_file)" />
+    <param name="role_id" value="$(arg role_id)" />
+  </node>
 </launch>
