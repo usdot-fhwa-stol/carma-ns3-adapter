@@ -38,4 +38,4 @@ while [[ $# -gt 0 ]]; do
 done
 
 git clone https://github.com/usdot-fhwa-stol/carma-msgs.git "${dir}"/src/CARMAMsgs --branch "${BRANCH}"
-git clone https://github.com/usdot-fhwa-stol/carma-utils.git "${dir}"/src/CARMAUtils --branch arc-175-add-record
+git clone https://github.com/usdot-fhwa-stol/carma-utils.git "${dir}"/src/CARMAUtils --branch "${BRANCH}"
