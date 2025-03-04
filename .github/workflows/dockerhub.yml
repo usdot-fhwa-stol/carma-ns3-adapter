@@ -15,3 +15,7 @@ jobs:
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+    with:
+      file: ./Dockerfile
+      tag_name_suffix: noetic
+      replace_suffix: true # TODO: remove after develop-humble branch is merged to develop
