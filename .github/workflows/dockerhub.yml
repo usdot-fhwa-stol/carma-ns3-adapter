@@ -18,4 +18,4 @@ jobs:
     with:
       file: ./Dockerfile
       tag_name_suffix: noetic
-      replace_suffix: true # TODO: remove after develop-humble branch is merged to develop
+      remove_suffix: true
