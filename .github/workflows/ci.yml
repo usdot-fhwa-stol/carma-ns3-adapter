@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - develop
-      - develop-humble
       - master
       - "release/*"
 jobs:
@@ -25,7 +24,7 @@ jobs:
         working-directory: "/opt/carma/"
     runs-on: ubuntu-latest
     container:
-      image: ${{ needs.determine_docker_org_and_tag.outputs.docker_organization }}/carma-base:${{ needs.determine_docker_org_and_tag.outputs.docker_image_tag }}-noetic
+      image: ${{ needs.determine_docker_org_and_tag.outputs.docker_organization }}/carma-base:${{ needs.determine_docker_org_and_tag.outputs.docker_image_tag }}
       env:
         INIT_ENV: "/home/carma/.base-image/init-env.sh"
         ROS_1_ENV: "/opt/ros/noetic/setup.bash"
