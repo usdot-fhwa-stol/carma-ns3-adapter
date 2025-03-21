@@ -13,7 +13,7 @@
 #  the License.
 
 ARG DOCKER_ORG="usdotfhwastolcandidate"
-ARG DOCKER_TAG="timtsp-humble"
+ARG DOCKER_TAG="timtsp-noetic"
 FROM ${DOCKER_ORG}/carma-base:${DOCKER_TAG} as base_image
 FROM base_image as setup
 ARG GIT_BRANCH="release/timtsp"
