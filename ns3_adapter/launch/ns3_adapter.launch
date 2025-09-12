@@ -24,7 +24,7 @@
   <!-- Global parameters file path -->
   <!-- Parameters in this file will override any parameters loaded in their respective packages -->
   <arg name="global_params_file"
-    default="$(arg vehicle_config_dir)/GlobalParamsOverride.yaml"
+    default="$(arg vehicle_config_dir)/GlobalParamsOverrideRos1.yaml"
     doc="Path to global vehicle configuration parameters file"
   />
 
