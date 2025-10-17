@@ -31,7 +31,8 @@ class VehicleRegistrationSender:
         parser.add_argument('--rxMessageIpAddress', type=str, default="172.2.0.7", help='IP address of the message receiver')
         parser.add_argument('--rxMessagePort', type=int, default=2500, help='Port number for message receiver')
         parser.add_argument('--rxTimeSyncPort', type=int, default=2501, help='Port number for time synchronization')
-        parser.add_argument('--receiverPort', type=int, default=1515, help='Port number for the receiver')
+        parser.add_argument('--receiverPort', type=int, default=1515, help='Port number for the mosaic receiver')
+        parser.add_argument('--receiverIpAddress', type=str, default="172.2.0.2", help="Ip address for the mosaic receiver")
         args = parser.parse_args()
 
         self.vehicleId = args.vehicleId
@@ -40,6 +41,7 @@ class VehicleRegistrationSender:
         self.rxMessagePort = args.rxMessagePort
         self.rxTimeSyncPort = args.rxTimeSyncPort
         self.receiverPort = args.receiverPort
+        self.receiverIpAddress = args.receiverIpAddress
 
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
@@ -62,16 +64,14 @@ class VehicleRegistrationSender:
             try:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     s.settimeout(CONNECT_TIMEOUT)
-                    self.logger.info(f"Attempting to connect to {self.rxMessageIpAddress}:{self.receiverPort}")
-                    s.connect((self.rxMessageIpAddress, self.receiverPort))
+                    self.logger.info(f"Attempting to connect to {self.receiverIpAddress}:{self.receiverPort}")
+                    s.connect((self.receiverIpAddress, self.receiverPort))
                     s.settimeout(SEND_TIMEOUT)
                     self.logger.info("Connected. Starting to send handshakes.")
 
                     while True:
                         try:
-                            # Send length prefix + message (reliable framing)
-                            payload = struct.pack('!I', len(message)) + message
-                            s.sendall(payload)
+                            s.sendall(message)
                             self.logger.debug(f"Handshake sent: {handshake_json}")
                             time.sleep(1.0 / SEND_RATE)
                         except (BrokenPipeError, ConnectionResetError, OSError) as e:
@@ -79,7 +79,7 @@ class VehicleRegistrationSender:
                             break  # Break to reconnect
                 # Immediate retry on connection close
                 self.logger.info("Connection closed. Retrying immediately...")
-                time.sleep(0.1)  # Minimal pause to avoid tight loop; set to 0 for true immediate
+                time.sleep(0.1) 
             except socket.timeout:
                 self.logger.error("Connection timeout. Retrying immediately...")
                 time.sleep(0.1)
