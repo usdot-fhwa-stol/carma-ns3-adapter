@@ -76,8 +76,7 @@ class VehicleRegistrationSender:
                             time.sleep(1.0 / SEND_RATE)
                         except (BrokenPipeError, ConnectionResetError, OSError) as e:
                             self.logger.error(f"Send failed: {e}. Reconnecting immediately...")
-                            break  # Break to reconnect
-                # Immediate retry on connection close
+                            break
                 self.logger.info("Connection closed. Retrying immediately...")
                 time.sleep(0.1) 
             except socket.timeout:

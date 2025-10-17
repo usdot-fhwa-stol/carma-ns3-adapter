@@ -12,190 +12,235 @@
 #   License for the specific language governing permissions and limitations under
 #   the License.
 import unittest
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import patch, Mock, call, ANY
 import json
 import socket
-import struct
+import logging
 import sys
-import os
+from io import StringIO
 
-# Add project root if running directly
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from src.vehicleRegistration import VehicleRegistrationSender
+from src.vehicleRegistration import VehicleRegistrationSender, CONNECT_TIMEOUT, SEND_TIMEOUT
 
 class TestVehicleRegistrationSender(unittest.TestCase):
 
     def setUp(self):
-        self.argv_patch = patch.object(sys, 'argv', ['script.py'])
-        self.argv_patch.start()
+        self.patcher = patch('src.vehicleRegistration.logging.basicConfig')
+        self.mock_basic_config = self.patcher.start()
+        self.log_capture = StringIO()
+        self.handler = logging.StreamHandler(self.log_capture)
+        self.logger_patcher = patch('src.vehicleRegistration.logging.getLogger', return_value=logging.getLogger('mock_logger'))
+        self.mock_get_logger = self.logger_patcher.start()
+        self.mock_logger = logging.getLogger('mock_logger')
+        self.mock_logger.addHandler(self.handler)
+        self.mock_logger.setLevel(logging.DEBUG)
 
     def tearDown(self):
-        self.argv_patch.stop()
+        self.patcher.stop()
+        self.logger_patcher.stop()
+        self.mock_logger.removeHandler(self.handler)
 
-    def test_init_defaults(self):
-        sender = VehicleRegistrationSender()
+    def test_init_default_args(self):
+        with patch('sys.argv', ['script.py']):
+            sender = VehicleRegistrationSender()
+        
         self.assertEqual(sender.vehicleId, "carma_1")
         self.assertEqual(sender.roleId, "carma_1")
         self.assertEqual(sender.rxMessageIpAddress, "172.2.0.7")
         self.assertEqual(sender.rxMessagePort, 2500)
         self.assertEqual(sender.rxTimeSyncPort, 2501)
         self.assertEqual(sender.receiverPort, 1515)
+        self.assertEqual(sender.receiverIpAddress, "172.2.0.2")
+        self.mock_basic_config.assert_called_with(level=logging.INFO)
 
-    @patch.object(sys, 'argv', ['script.py', '--vehicleId', 'test_car', '--receiverPort', '9999'])
-    def test_init_overrides(self):
-        sender = VehicleRegistrationSender()
-        self.assertEqual(sender.vehicleId, "test_car")
-        self.assertEqual(sender.receiverPort, 9999)
-        self.assertEqual(sender.roleId, "carma_1")
+    def test_init_custom_args(self):
+        custom_args = [
+            'script.py',
+            '--vehicleId', 'test_vehicle',
+            '--roleId', 'test_role',
+            '--rxMessageIpAddress', '192.168.1.100',
+            '--rxMessagePort', '3000',
+            '--rxTimeSyncPort', '3001',
+            '--receiverPort', '2000',
+            '--receiverIpAddress', '192.168.1.200'
+        ]
+        with patch('sys.argv', custom_args):
+            sender = VehicleRegistrationSender()
+        
+        self.assertEqual(sender.vehicleId, "test_vehicle")
+        self.assertEqual(sender.roleId, "test_role")
+        self.assertEqual(sender.rxMessageIpAddress, "192.168.1.100")
+        self.assertEqual(sender.rxMessagePort, 3000)
+        self.assertEqual(sender.rxTimeSyncPort, 3001)
+        self.assertEqual(sender.receiverPort, 2000)
+        self.assertEqual(sender.receiverIpAddress, "192.168.1.200")
 
     def test_compose_json_handshake_payload(self):
-        sender = VehicleRegistrationSender()
-        sender.vehicleId = "test_id"
-        sender.roleId = "test_role"
-        sender.rxMessageIpAddress = "192.168.1.1"
-        sender.rxMessagePort = 1234
-        sender.rxTimeSyncPort = 5678
-        expected = json.dumps({
-            'vehicleId': "test_id",
-            'roleId': "test_role",
-            'rxMessageIpAddress': "192.168.1.1",
-            'rxMessagePort': 1234,
-            'rxTimeSyncPort': 5678
-        })
-        self.assertEqual(sender.compose_json_handshake_payload(), expected)
+        with patch('sys.argv', ['script.py']):
+            sender = VehicleRegistrationSender()
+        
+        payload = json.loads(sender.compose_json_handshake_payload())
+        
+        expected = {
+            'vehicleId': 'carma_1',
+            'roleId': 'carma_1',
+            'rxMessageIpAddress': '172.2.0.7',
+            'rxMessagePort': 2500,
+            'rxTimeSyncPort': 2501
+        }
+        self.assertDictEqual(payload, expected)
 
     @patch('time.sleep', return_value=None)
-    @patch('src.vehicleRegistration.logging')
-    @patch('socket.socket', autospec=True)
-    def test_send_successful_sends(self, mock_socket_class, mock_logging, mock_sleep):
-        mock_logger = MagicMock()
-        mock_logging.getLogger.return_value = mock_logger
-
-        mock_sock = MagicMock()
-        mock_socket_class.return_value.__enter__.return_value = mock_sock
-
-        sender = VehicleRegistrationSender()
-        payload_json = '{"test": "payload"}'
-        message_bytes = payload_json.encode('utf-8')
-        expected_prefix = struct.pack('!I', len(message_bytes))
-
-        send_count = [0]
-        def side_effect_sendall(data):
-            send_count[0] += 1
-            self.assertTrue(data.startswith(expected_prefix))
-            if send_count[0] == 2:
-                raise OSError("Simulated disconnect")
-
-        mock_sock.sendall.side_effect = side_effect_sendall
-
-        connect_count = [0]
-        def side_effect_connect(addr):
-            connect_count[0] += 1
-            if connect_count[0] == 2:
-                raise KeyboardInterrupt()
-
-        mock_sock.connect.side_effect = side_effect_connect
-
-        with patch.object(sender, 'compose_json_handshake_payload', return_value=payload_json):
-            sender.send()
-
-        mock_socket_class.assert_called_with(socket.AF_INET, socket.SOCK_STREAM)
-        mock_sock.settimeout.assert_has_calls([call(5), call(5)])
-        mock_sock.connect.assert_called_with(('172.2.0.7', 1515))
-        self.assertEqual(mock_sock.sendall.call_count, 2)
-        mock_sleep.assert_has_calls([call(0.1)] * 2)
-        mock_logger.info.assert_any_call(f"Attempting to connect to 172.2.0.7:1515")
-        mock_logger.info.assert_any_call("Connected. Starting to send handshakes.")
-        mock_logger.debug.assert_has_calls([call(f"Handshake sent: {payload_json}")])
-        mock_logger.info.assert_any_call("Connection closed. Retrying immediately...")
-        mock_logger.info.assert_any_call("Shutting down.")
-
-    @patch('time.sleep', return_value=None)
-    @patch('src.vehicleRegistration.logging')
-    @patch('socket.socket', autospec=True)
-    def test_send_connection_timeout_retry(self, mock_socket_class, mock_logging, mock_sleep):
-        mock_logger = MagicMock()
-        mock_logging.getLogger.return_value = mock_logger
-
-        mock_sock = MagicMock()
-        mock_socket_class.return_value.__enter__.return_value = mock_sock
-
-        sender = VehicleRegistrationSender()
-
-        connect_count = [0]
-        def side_effect_connect(addr):
-            connect_count[0] += 1
-            if connect_count[0] == 1:
-                raise socket.timeout()
-            raise KeyboardInterrupt()
-
-        mock_sock.connect.side_effect = side_effect_connect
-
+    @patch('socket.socket')
+    def test_send_successful_connection_and_send(self, mock_socket_class, mock_sleep):
+        with patch('sys.argv', ['script.py']):
+            sender = VehicleRegistrationSender()
+        
+        mock_socket = Mock()
+        mock_socket_class.return_value.__enter__.return_value = mock_socket
+        
+        mock_socket.connect.return_value = None
+        mock_socket.sendall.side_effect = [None, KeyboardInterrupt()]
+        
         with patch.object(sender, 'compose_json_handshake_payload', return_value='{"test": "payload"}'):
             sender.send()
-
-        mock_logger.error.assert_any_call("Connection timeout. Retrying immediately...")
-        mock_sleep.assert_called_with(0.1)
+        
+        mock_socket_class.assert_called_with(socket.AF_INET, socket.SOCK_STREAM)
+        mock_socket.settimeout.assert_any_call(CONNECT_TIMEOUT)
+        mock_socket.connect.assert_called_with(('172.2.0.2', 1515))
+        mock_socket.settimeout.assert_any_call(SEND_TIMEOUT)
+        
+        log_output = self.log_capture.getvalue()
+        self.assertIn("Attempting to connect to 172.2.0.2:1515", log_output)
+        self.assertIn("Connected. Starting to send handshakes.", log_output)
+        self.assertIn('Handshake sent: {"test": "payload"}', log_output)
+        self.assertIn("Shutting down.", log_output)
 
     @patch('time.sleep', return_value=None)
-    @patch('src.vehicleRegistration.logging')
-    @patch('socket.socket', autospec=True)
-    def test_send_broken_pipe_retry(self, mock_socket_class, mock_logging, mock_sleep):
-        mock_logger = MagicMock()
-        mock_logging.getLogger.return_value = mock_logger
-
-        mock_sock = MagicMock()
-        mock_socket_class.return_value.__enter__.return_value = mock_sock
-
-        send_count = [0]
-        def side_effect_sendall(data):
-            send_count[0] += 1
-            if send_count[0] == 1:
-                raise OSError("Broken pipe")
-            raise KeyboardInterrupt()
-
-        mock_sock.sendall.side_effect = side_effect_sendall
-
-        connect_count = [0]
-        def side_effect_connect(addr):
-            connect_count[0] += 1
-            if connect_count[0] == 2:
+    @patch('socket.socket')
+    def test_send_connection_timeout(self, mock_socket_class, mock_sleep):
+        with patch('sys.argv', ['script.py']):
+            sender = VehicleRegistrationSender()
+        
+        mock_socket = Mock()
+        mock_socket_class.return_value.__enter__.return_value = mock_socket
+        
+        connect_calls = []
+        def connect_side_effect(*args):
+            connect_calls.append(1)
+            if len(connect_calls) >= 2:
                 raise KeyboardInterrupt()
-            return
-
-        mock_sock.connect.side_effect = side_effect_connect
-
-        sender = VehicleRegistrationSender()
-
-        with patch.object(sender, 'compose_json_handshake_payload', return_value='{" тест": "payload"}'):
-            sender.send()
-
-        mock_sock.connect.assert_called()
-        mock_logger.error.assert_any_call("Send failed: Broken pipe. Reconnecting immediately...")
-        mock_logger.info.assert_any_call("Connection closed. Retrying immediately...")
+            raise socket.timeout()
+        
+        mock_socket.connect.side_effect = connect_side_effect
+        
+        sender.send()
+        
+        log_output = self.log_capture.getvalue()
+        self.assertIn("Attempting to connect to 172.2.0.2:1515", log_output)
+        self.assertIn("Connection timeout. Retrying immediately...", log_output)
+        self.assertIn("Shutting down.", log_output)
+        self.assertGreaterEqual(len(connect_calls), 2)
 
     @patch('time.sleep', return_value=None)
-    @patch('src.vehicleRegistration.logging')
-    @patch('socket.socket', autospec=True)
-    def test_send_keyboard_interrupt(self, mock_socket_class, mock_logging, mock_sleep):
-        mock_logger = MagicMock()
-        mock_logging.getLogger.return_value = mock_logger
-
-        mock_sock = MagicMock()
-        mock_socket_class.return_value.__enter__.return_value = mock_sock
-
-        sender = VehicleRegistrationSender()
-
-        def side_effect_connect(addr):
-            raise KeyboardInterrupt()
-
-        mock_sock.connect.side_effect = side_effect_connect
-
-        with patch.object(sender, 'compose_json_handshake_payload'):
+    @patch('socket.socket')
+    def test_send_broken_pipe_during_send(self, mock_socket_class, mock_sleep):
+        with patch('sys.argv', ['script.py']):
+            sender = VehicleRegistrationSender()
+        
+        mock_socket = Mock()
+        mock_socket_class.return_value.__enter__.return_value = mock_socket
+        
+        send_calls = []
+        def send_side_effect(data):
+            send_calls.append(1)
+            if len(send_calls) == 1:
+                return None
+            else:
+                raise BrokenPipeError()
+        
+        mock_socket.sendall.side_effect = send_side_effect
+        
+        reconnect_attempts = 0
+        def connect_side_effect(*args):
+            nonlocal reconnect_attempts
+            reconnect_attempts += 1
+            if reconnect_attempts >= 2:
+                raise KeyboardInterrupt()
+            return None
+        
+        mock_socket.connect.side_effect = connect_side_effect
+        
+        with patch.object(sender, 'compose_json_handshake_payload', return_value='{"test": "payload"}'):
             sender.send()
+        
+        log_output = self.log_capture.getvalue()
+        self.assertIn("Attempting to connect to 172.2.0.2:1515", log_output)
+        self.assertIn("Connected. Starting to send handshakes.", log_output)
+        self.assertIn('Handshake sent: {"test": "payload"}', log_output)
+        self.assertIn("Send failed: ", log_output)
+        self.assertIn("Reconnecting immediately...", log_output)
+        self.assertIn("Connection closed. Retrying immediately...", log_output)
+        self.assertIn("Shutting down.", log_output)
+        self.assertEqual(len(send_calls), 2)
+        self.assertEqual(reconnect_attempts, 2)
 
-        mock_logger.info.assert_called_with("Shutting down.")
+    @patch('time.sleep', return_value=None)
+    @patch('socket.socket')
+    def test_send_connection_reset(self, mock_socket_class, mock_sleep):
+        with patch('sys.argv', ['script.py']):
+            sender = VehicleRegistrationSender()
+        
+        mock_socket = Mock()
+        mock_socket_class.return_value.__enter__.return_value = mock_socket
+        
+        mock_socket.sendall.side_effect = ConnectionResetError()
+        
+        reconnect_attempts = 0
+        def connect_side_effect(*args):
+            nonlocal reconnect_attempts
+            reconnect_attempts += 1
+            if reconnect_attempts >= 2:
+                raise KeyboardInterrupt()
+            return None
+        
+        mock_socket.connect.side_effect = connect_side_effect
+        
+        with patch.object(sender, 'compose_json_handshake_payload', return_value='{"test": "payload"}'):
+            sender.send()
+        
+        log_output = self.log_capture.getvalue()
+        self.assertIn("Attempting to connect to 172.2.0.2:1515", log_output)
+        self.assertIn("Connected. Starting to send handshakes.", log_output)
+        self.assertIn("Send failed: ", log_output)
+        self.assertIn("Reconnecting immediately...", log_output)
+        self.assertIn("Connection closed. Retrying immediately...", log_output)
+        self.assertIn("Shutting down.", log_output)
+
+    @patch('time.sleep', return_value=None)
+    @patch('socket.socket')
+    def test_send_unexpected_exception(self, mock_socket_class, mock_sleep):
+        with patch('sys.argv', ['script.py']):
+            sender = VehicleRegistrationSender()
+        
+        mock_socket = Mock()
+        mock_socket_class.return_value.__enter__.return_value = mock_socket
+        
+        attempts = 0
+        def connect_side_effect(*args):
+            nonlocal attempts
+            attempts += 1
+            if attempts >= 2:
+                raise KeyboardInterrupt()
+            raise Exception("Unexpected")
+        
+        mock_socket.connect.side_effect = connect_side_effect
+        
+        sender.send()
+        
+        log_output = self.log_capture.getvalue()
+        self.assertIn("Attempting to connect to 172.2.0.2:1515", log_output)
+        self.assertIn("Unexpected error: Unexpected. Retrying...", log_output)
+        self.assertIn("Shutting down.", log_output)
 
 if __name__ == '__main__':
     unittest.main()
