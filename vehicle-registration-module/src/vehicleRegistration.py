@@ -60,40 +60,24 @@ class VehicleRegistrationSender:
         handshake_json = self.compose_json_handshake_payload()
         message = handshake_json.encode('utf-8')
 
-        while True:
-            try:
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                    s.settimeout(CONNECT_TIMEOUT)
-                    self.logger.info(f"Attempting to connect to {self.receiverIpAddress}:{self.receiverPort}")
-                    s.connect((self.receiverIpAddress, self.receiverPort))
-                    s.settimeout(SEND_TIMEOUT)
-                    self.logger.info("Connected. Starting to send handshakes.")
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.settimeout(SEND_TIMEOUT)
 
-                    while True:
-                        try:
-                            s.sendall(message)
-                            self.logger.debug(f"Handshake sent: {handshake_json}")
-                            time.sleep(1.0 / SEND_RATE)
-                        except (BrokenPipeError, ConnectionResetError, OSError) as e:
-                            self.logger.error(f"Send failed: {e}. Reconnecting immediately...")
-                            break
-                self.logger.info("Connection closed. Retrying immediately...")
-                time.sleep(0.1) 
-            except socket.timeout:
-                self.logger.error("Connection timeout. Retrying immediately...")
-                time.sleep(0.1)
-                continue
-            except ConnectionError as e:
-                self.logger.error(f"Connection error: {e}. Retrying immediately...")
-                time.sleep(0.1)
-                continue
-            except KeyboardInterrupt:
-                self.logger.info("Shutting down.")
-                break
-            except Exception as e:
-                self.logger.error(f"Unexpected error: {e}. Retrying...")
-                time.sleep(0.1)
-                continue
+        self.logger.info(
+            f"Sending UDP handshakes to {self.receiverIpAddress}:{self.receiverPort}"
+        )
+
+        try:
+            while True:
+                sock.sendto(message, (self.receiverIpAddress, self.receiverPort))
+                self.logger.debug(f"Handshake sent: {handshake_json}")
+                time.sleep(1.0 / SEND_RATE)
+
+        except KeyboardInterrupt:
+            self.logger.info("Shutting down sender.")
+
+        finally:
+            sock.close()
 
 if __name__ == "__main__":
     sender = VehicleRegistrationSender()
