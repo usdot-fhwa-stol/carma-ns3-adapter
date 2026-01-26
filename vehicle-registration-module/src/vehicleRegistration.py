@@ -49,7 +49,7 @@ class VehicleRegistrationSender:
     def compose_json_handshake_payload(self):
         output_payload = {
             'vehicleId': self.vehicleId,
-            'roleId': self.roleId,
+            'vehicleRole': self.roleId,
             'rxMessageIpAddress': self.rxMessageIpAddress,
             'rxMessagePort': self.rxMessagePort,
             'rxTimeSyncPort': self.rxTimeSyncPort
@@ -70,7 +70,7 @@ class VehicleRegistrationSender:
         try:
             while True:
                 sock.sendto(message, (self.receiverIpAddress, self.receiverPort))
-                self.logger.debug(f"Handshake sent: {handshake_json}")
+                self.logger.info(f"Handshake sent: {handshake_json}")
                 time.sleep(1.0 / SEND_RATE)
 
         except KeyboardInterrupt:
