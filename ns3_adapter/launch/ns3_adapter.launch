@@ -23,15 +23,15 @@
 
   <!-- Global parameters file path -->
   <!-- Parameters in this file will override any parameters loaded in their respective packages -->
-  <!-- arg name="global_params_file"
+  < arg name="global_params_file"
     default="$(arg vehicle_config_dir)/GlobalParamsOverrideRos1.yaml"
     doc="Path to global vehicle configuration parameters file"
-  /-->
+  />
 
   <!-- Load Topic Exclusion Rules -->
   <rosparam command="load" file="$(arg vehicle_config_dir)/VehicleConfigParams.yaml"/>
   <!-- Load Parameters Override -->
-  <!-- rosparam command="load" file="$(arg global_params_file)"/ -->
+  <rosparam command="load" file="$(arg global_params_file)"/>
 
   <!-- Logging -->
   <!-- ROS Bag -->
