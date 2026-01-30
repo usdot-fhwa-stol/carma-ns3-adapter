@@ -45,6 +45,7 @@ LABEL org.label-schema.vcs-ref=${VCS_REF}
 LABEL org.label-schema.build-date=${BUILD_DATE}
 
 COPY --from=setup /opt/carma/install /opt/carma/install
+COPY vehicle-registration-module /opt/carma/vehicle-registration-module/
 RUN sudo chmod -R +x /opt/carma/install
 
 CMD  [ "wait-for-it.sh", "localhost:11311", "--", "roslaunch", "ns3_adapter", "ns3_adapter.launch", "remap_ns:=/hardware_interface/comms" ]
