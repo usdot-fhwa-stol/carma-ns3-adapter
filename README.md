@@ -1,8 +1,6 @@
-| CI Build Status | Sonar Code Quality | DockerHub Release | DockerHub Release Candidate | DockerHub Develop |
-|------|-----|-----|-----|-----|
-[![CI](https://github.com/usdot-fhwa-stol/carma-ns3-adapter/actions/workflows/ci.yml/badge.svg)](https://github.com/usdot-fhwa-stol/carma-ns3-adapter/actions/workflows/ci.yml)| [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=usdot-fhwa-stol_CARMANS3Adapter&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=usdot-fhwa-stol_CARMANS3Adapter) | [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/usdotfhwastol/carma-ns3-adapter?label=carma-ns3-adapter)](https://hub.docker.com/repository/docker/usdotfhwastol/carma-ns3-adapter) | [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/usdotfhwastolcandidate/carma-ns3-adapter?label=carma-ns3-adapter)](https://hub.docker.com/repository/docker/usdotfhwastolcandidate/carma-ns3-adapter) | [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/usdotfhwastoldev/carma-ns3-adapter?label=carma-ns3-adapter)](https://hub.docker.com/repository/docker/usdotfhwastoldev/carma-ns3-adapter)
-
-
+| Docker Image Build (develop) | Sonar Code Quality | Unit Tests Workflow |
+|----------------------|---------------------|---------------------|
+|[![Docker Hub build](https://github.com/usdot-fhwa-stol/carma-ns3-adapter/actions/workflows/dockerhub.yml/badge.svg?branch=develop)](https://github.com/usdot-fhwa-stol/carma-ns3-adapter/actions/workflows/dockerhub.yml) | [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=usdot-fhwa-stol_CARMANS3Adapter&metric=alert_status)](https://sonarcloud.io/dashboard?id=usdot-fhwa-stol_CARMANS3Adapter)| [![CI: Run tests](https://github.com/usdot-fhwa-stol/carma-ns3-adapter/actions/workflows/ci.yml/badge.svg)](https://github.com/usdot-fhwa-stol/carma-ns3-adapter/actions/workflows/ci.yml)|
 
 # CARMA NS3 Adapter
 CARMA NS3 Adapter is a simulated communications device driver for usage with the CARMA Platform to enable connection with CDASim. This driver will register with the simulation environment to initialize a virtual radio and utilize that connection to send and receive V2X messages in the simulated spectrum within NS3.
@@ -26,6 +24,6 @@ The development team would like to acknowledge the people who have made direct c
 By contributing to the Federal Highway Administration (FHWA) Connected Automated Research Mobility Applications (CARMA), you agree that your contributions will be licensed under its Apache License 2.0 license. [CARMA License](https://github.com/usdot-fhwa-stol/carma-platform/blob/develop/docs/License.md) 
 
 ## Contact
-Please click on the CARMA logo below to visit the Federal Highway Adminstration(FHWA) CARMA website.
+Please click on the CARMA logo below to visit the Federal Highway Adminstration(FHWA) CARMA website. For more information, contact CAVSupportServices@dot.gov.
 
 [![CARMA Image](https://raw.githubusercontent.com/usdot-fhwa-stol/carma-platform/develop/docs/image/CARMA_icon.png)](https://highways.dot.gov/research/research-programs/operations/CARMA)
