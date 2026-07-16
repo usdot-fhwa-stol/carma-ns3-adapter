@@ -243,7 +243,7 @@ void NS3Adapter::on_outbound_message(const cav_msgs::ByteArrayPtr& message) {
 * @brief Sends a message from the queue of outbound messages
 */
 void NS3Adapter::send_message_from_queue() {
-    if (!send_msg_queue_.empty()) {
+    while (!send_msg_queue_.empty()) {
         ROS_DEBUG_STREAM("Sending message: " << std::string(send_msg_queue_.front()->begin(),send_msg_queue_.front()->end()));
         bool success = ns3_client_.send_ns3_message(send_msg_queue_.front());
         send_msg_queue_.pop_front();

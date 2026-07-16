@@ -12,11 +12,11 @@
 #  License for the specific language governing permissions and limitations under
 #  the License.
 
-ARG DOCKER_ORG="usdotfhwastol"
-ARG DOCKER_TAG="carma-system-4.9.0"
-FROM usdotfhwastol/carma-base:carma-system-4.5.0 as base_image
+ARG DOCKER_ORG="usdotfhwastoldev"
+ARG DOCKER_TAG="develop-noetic"
+FROM ${DOCKER_ORG}/carma-base:${DOCKER_TAG} as base_image
 FROM base_image as setup
-ARG GIT_BRANCH="carma-system-4.5.0"
+ARG GIT_BRANCH="develop"
 
 ARG ROS1_PACKAGES=""
 ENV ROS1_PACKAGES=${ROS1_PACKAGES}
@@ -45,6 +45,7 @@ LABEL org.label-schema.vcs-ref=${VCS_REF}
 LABEL org.label-schema.build-date=${BUILD_DATE}
 
 COPY --from=setup /opt/carma/install /opt/carma/install
+COPY vehicle-registration-module /opt/carma/vehicle-registration-module/
 RUN sudo chmod -R +x /opt/carma/install
 
 CMD  [ "wait-for-it.sh", "localhost:11311", "--", "roslaunch", "ns3_adapter", "ns3_adapter.launch", "remap_ns:=/hardware_interface/comms" ]
